@@ -27,7 +27,7 @@ aiofiles==23.2.1
 
 # Data validation and serialization
 pydantic==1.10.12
-pydantic-settings==1.10.1
+pydantic-settings==2.0.0
 email-validator==2.1.0
 
 # Background tasks
