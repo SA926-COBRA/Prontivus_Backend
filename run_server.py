@@ -16,19 +16,19 @@ if "USE_SQLITE" not in os.environ:
 if "USE_DATABASE" not in os.environ:
     os.environ["USE_DATABASE"] = "true"  # Use database endpoints for Prontivus
 if "DATABASE_URL" not in os.environ:
-    os.environ["DATABASE_URL"] = "postgresql://postgres:200113@localhost:5432/prontivus_db"
+    os.environ["DATABASE_URL"] = "postgresql://prontivus_rh0l_user:eKdELoiPkpuvqiuD84ao7yfkltPy7oev@dpg-d39ab7fdiees7387nihg-a.oregon-postgres.render.com/prontivus_rh0l"
 if "DATABASE_URL_ASYNC" not in os.environ:
-    os.environ["DATABASE_URL_ASYNC"] = "postgresql+asyncpg://postgres:200113@localhost:5432/prontivus_db"
+    os.environ["DATABASE_URL_ASYNC"] = "postgresql+asyncpg://prontivus_rh0l_user:eKdELoiPkpuvqiuD84ao7yfkltPy7oev@dpg-d39ab7fdiees7387nihg-a.oregon-postgres.render.com/prontivus_rh0l"
 if "POSTGRES_HOST" not in os.environ:
-    os.environ["POSTGRES_HOST"] = "localhost"
+    os.environ["POSTGRES_HOST"] = "dpg-d39ab7fdiees7387nihg-a.oregon-postgres.render.com"
 if "POSTGRES_PORT" not in os.environ:
     os.environ["POSTGRES_PORT"] = "5432"
 if "POSTGRES_DB" not in os.environ:
-    os.environ["POSTGRES_DB"] = "prontivus_db"
+    os.environ["POSTGRES_DB"] = "prontivus_rh0l"
 if "POSTGRES_USER" not in os.environ:
-    os.environ["POSTGRES_USER"] = "postgres"
+    os.environ["POSTGRES_USER"] = "prontivus_rh0l_user"
 if "POSTGRES_PASSWORD" not in os.environ:
-    os.environ["POSTGRES_PASSWORD"] = "200113"
+    os.environ["POSTGRES_PASSWORD"] = "eKdELoiPkpuvqiuD84ao7yfkltPy7oev"
 if "ENVIRONMENT" not in os.environ:
     os.environ["ENVIRONMENT"] = "production"
 if "DEBUG" not in os.environ:

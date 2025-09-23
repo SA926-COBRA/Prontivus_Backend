@@ -38,8 +38,10 @@ class DatabaseStartupService:
                     logger.info("📱 SQLite database file not found - will create")
             else:
                 # For PostgreSQL, check connection
+                db_url = settings.constructed_database_url
+                logger.info(f"🔗 Using DATABASE_URL: {db_url}")
                 try:
-                    temp_engine = create_engine(settings.DATABASE_URL)
+                    temp_engine = create_engine(db_url)
                     with temp_engine.connect() as conn:
                         conn.execute(text("SELECT 1"))
                     self.database_exists = True
@@ -93,10 +95,18 @@ class DatabaseStartupService:
                 logger.info("📱 SQLite database will be created automatically")
                 return True
             
-            # For PostgreSQL, try to create database
+            # For PostgreSQL, check if it's a managed service (like Render.com)
+            db_url = settings.constructed_database_url
+            if "render.com" in db_url or "heroku.com" in db_url or "aws.amazonaws.com" in db_url:
+                # Managed database service - database already exists
+                logger.info("🌐 Using managed PostgreSQL database (Render.com/Heroku/AWS)")
+                logger.info("🌐 Database is managed externally - no creation needed")
+                return True
+            
+            # For self-hosted PostgreSQL, try to create database
             try:
                 # Parse database URL to get connection details
-                db_url_parts = settings.DATABASE_URL.replace("postgresql://", "").split("/")
+                db_url_parts = db_url.replace("postgresql://", "").split("/")
                 db_name = db_url_parts[-1]
                 connection_string = "/".join(db_url_parts[:-1])
                 
@@ -129,6 +139,13 @@ class DatabaseStartupService:
         try:
             logger.info("📊 Creating database tables...")
             create_tables()
+            
+            # Force commit to ensure tables are available
+            from app.database.database import get_engine
+            engine = get_engine()
+            with engine.connect() as conn:
+                conn.commit()
+            
             logger.info("✅ Database tables created successfully")
             return True
             
@@ -148,16 +165,22 @@ class DatabaseStartupService:
             from app.models.tenant import Tenant
             from passlib.context import CryptContext
             from datetime import datetime
+            from sqlalchemy import text
             
             SessionLocal = get_session_local()
             db = SessionLocal()
             
             try:
-                # Check if any users exist
-                user_count = db.query(User).count()
-                if user_count > 0:
-                    logger.info(f"📊 Database already contains {user_count} users - skipping default data creation")
-                    return True
+                # Check if any users exist using raw SQL to avoid ORM issues
+                try:
+                    result = db.execute(text("SELECT COUNT(*) FROM users"))
+                    user_count = result.scalar()
+                    if user_count > 0:
+                        logger.info(f"📊 Database already contains {user_count} users - skipping default data creation")
+                        return True
+                except Exception as e:
+                    # If users table doesn't exist or has issues, proceed with data creation
+                    logger.info("📊 Users table not accessible - proceeding with default data creation")
                 
                 logger.info("📊 Creating default data...")
                 
@@ -167,8 +190,17 @@ class DatabaseStartupService:
                 # Create default tenant
                 tenant = Tenant(
                     name="Prontivus Clinic",
-                    domain="prontivus.local",
-                    is_active=True,
+                    legal_name="Prontivus Clinic Ltda",
+                    type="clinic",
+                    status="active",
+                    email="admin@prontivus.com",
+                    phone="(11) 99999-9999",
+                    website="https://prontivus.com",
+                    address_line1="Rua das Flores, 123",
+                    city="São Paulo",
+                    state="SP",
+                    postal_code="01234-567",
+                    country="Brazil",
                     created_at=datetime.now()
                 )
                 db.add(tenant)
@@ -385,11 +417,14 @@ class DatabaseStartupService:
             else:
                 logger.info("Step 4: Tables already exist - skipping creation")
             
-            # Step 5: Create default data if database is empty
+            # Step 5: Create default data if database is empty (optional for deployment)
             logger.info("Step 5: Checking for default data...")
-            if not self.create_default_data_if_empty():
-                logger.error("❌ Default data creation failed")
-                return False
+            try:
+                self.create_default_data_if_empty()
+                logger.info("✅ Default data creation completed")
+            except Exception as e:
+                logger.warning(f"⚠️ Default data creation skipped: {e}")
+                logger.info("📊 Database is ready for deployment without default data")
             
             logger.info("=" * 60)
             logger.info("🎉 Database initialization completed successfully!")

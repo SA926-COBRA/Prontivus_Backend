@@ -32,8 +32,8 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     
     # Database Configuration
-    DATABASE_URL: str = "postgresql://user:password@localhost/prontivus"
-    DATABASE_URL_ASYNC: str = "postgresql+asyncpg://user:password@localhost/prontivus"
+    DATABASE_URL: Optional[str] = None
+    DATABASE_URL_ASYNC: Optional[str] = None
     SQLITE_URL: str = "sqlite:///./prontivus_offline.db"
     USE_SQLITE: bool = True
     
@@ -102,6 +102,24 @@ class Settings(BaseSettings):
     # Monitoring
     SENTRY_DSN: Optional[str] = None
     
+    @property
+    def constructed_database_url(self) -> str:
+        """Construct DATABASE_URL from individual components if not provided directly"""
+        if self.DATABASE_URL:
+            return self.DATABASE_URL
+        
+        # Construct from individual PostgreSQL settings
+        return f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+    
+    @property
+    def constructed_database_url_async(self) -> str:
+        """Construct DATABASE_URL_ASYNC from individual components if not provided directly"""
+        if self.DATABASE_URL_ASYNC:
+            return self.DATABASE_URL_ASYNC
+        
+        # Construct from individual PostgreSQL settings
+        return f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+
     class Config:
         env_file = ".env"
         case_sensitive = True

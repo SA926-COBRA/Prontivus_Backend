@@ -43,7 +43,7 @@ def get_engine():
             print("📱 Using SQLite database (Offline Mode)")
         else:
             # Use PostgreSQL for online production with optimized settings
-            DATABASE_URL = settings.DATABASE_URL
+            DATABASE_URL = settings.constructed_database_url
             
             # Build connection arguments for production
             connect_args = {
