@@ -1,0 +1,45 @@
+# Core FastAPI dependencies
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+
+# Authentication
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+
+# Database
+sqlalchemy==2.0.23
+psycopg2-binary==2.9.9
+asyncpg==0.29.0
+
+# Configuration
+python-decouple==3.8
+pydantic==2.4.2
+pydantic-settings==2.0.3
+
+# Security
+cryptography==41.0.7
+pyotp==2.9.0
+
+# HTTP requests
+httpx==0.25.2
+requests==2.31.0
+
+# File handling
+aiofiles==23.2.1
+
+# Date/time handling
+python-dateutil==2.8.2
+pytz==2023.3
+
+# Email validation
+email-validator==2.1.0
+
+# QR code generation
+qrcode[pil]==7.4.2
+
+# PDF generation
+reportlab==4.0.7
+
+# Phone number validation
+phonenumbers==9.0.14
