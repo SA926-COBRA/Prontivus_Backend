@@ -10,7 +10,7 @@
 ### 2. Configure Build Settings
 - **Build Command**: `pip install --upgrade pip && pip install --no-cache-dir --only-binary :all: -r requirements.txt`
 - **Start Command**: `python main.py`
-- **Python Version**: `3.11`
+- **Python Version**: `3.11` (NOT 3.13 - compatibility issues)
 - **Alternative**: Use the provided `build.sh` script
 
 ### 3. Set Environment Variables
