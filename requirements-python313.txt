@@ -1,4 +1,6 @@
-# Use only pre-compiled wheels to avoid compilation issues
+# Python 3.13 compatible requirements for Render.com
+# All packages are pre-compiled wheels only
+
 --only-binary :all:
 
 # Core FastAPI dependencies
