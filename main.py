@@ -15,6 +15,7 @@ from app.core.config import settings
 from app.database.database import init_db
 from app.api.v1.api import api_router
 from app.core.exceptions import ProntivusException, prontivus_exception_handler
+from app.services.startup_service import initialize_database_on_startup
 
 # Configure logging - optimized for performance
 logging.basicConfig(
@@ -28,8 +29,14 @@ async def lifespan(app: FastAPI):
     """Application lifespan events"""
     # Startup
     logger.info("Starting Prontivus Backend...")
-    init_db()
-    logger.info("Database initialized successfully")
+    
+    # Automatic database initialization
+    logger.info("Initializing database automatically...")
+    if initialize_database_on_startup():
+        logger.info("✅ Database initialization completed successfully")
+    else:
+        logger.error("❌ Database initialization failed - server will continue with limited functionality")
+    
     yield
     # Shutdown
     logger.info("Shutting down Prontivus Backend...")
@@ -41,7 +48,7 @@ app = FastAPI(
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
-    # lifespan=lifespan,  # Temporarily disabled for debugging
+    lifespan=lifespan,  # Enable automatic database initialization
     # Performance optimizations
     generate_unique_id_function=lambda route: f"{route.tags[0]}-{route.name}" if route.tags else route.name,
     openapi_url="/openapi.json"
@@ -64,9 +71,6 @@ app.add_middleware(
 
 # Exception handlers
 app.add_exception_handler(ProntivusException, prontivus_exception_handler)
-
-# Initialize database manually (since lifespan is disabled)
-init_db()
 
 # Include API routes
 app.include_router(api_router, prefix="/api/v1")

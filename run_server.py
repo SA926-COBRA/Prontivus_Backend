@@ -59,6 +59,10 @@ def main():
         else:
             print("🌐 Using PostgreSQL Database (Online Mode)")
         print("🔐 Database Authentication Enabled")
+        print("🔄 Automatic Database Initialization Enabled")
+        print("   - Database will be created if it doesn't exist")
+        print("   - Tables will be created if they don't exist")
+        print("   - Default data will be created if database is empty")
     else:
         print("🎭 Using Mock Endpoints (Development)")
     
