@@ -1,4 +1,7 @@
-# FastAPI and core dependencies
+# Use only pre-compiled wheels to avoid compilation issues
+--only-binary :all:
+
+# Core FastAPI dependencies
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
 python-multipart==0.0.6
@@ -43,7 +46,7 @@ pytz==2023.3
 reportlab==4.0.7
 phonenumbers==9.0.14
 
-# Development (optional for production)
+# Development
 pytest==7.4.3
 pytest-asyncio==0.21.1
 black==23.11.0

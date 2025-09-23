@@ -8,9 +8,10 @@
 - Connect your GitHub repository
 
 ### 2. Configure Build Settings
-- **Build Command**: `pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt`
+- **Build Command**: `pip install --upgrade pip && pip install --no-cache-dir --only-binary :all: -r requirements.txt`
 - **Start Command**: `python main.py`
 - **Python Version**: `3.11`
+- **Alternative**: Use the provided `build.sh` script
 
 ### 3. Set Environment Variables
 Copy these to your Render.com service environment:

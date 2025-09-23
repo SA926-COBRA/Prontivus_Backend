@@ -3,13 +3,20 @@
 
 echo "🚀 Starting Prontivus Backend build on Render.com..."
 
+# Set Python version
+export PYTHON_VERSION=3.11
+
 # Upgrade pip to latest version
 echo "📦 Upgrading pip..."
 pip install --upgrade pip
 
-# Install dependencies with specific flags for Render.com
-echo "📦 Installing Python dependencies..."
-pip install --no-cache-dir --upgrade -r requirements.txt
+# Install system dependencies if needed
+echo "🔧 Installing system dependencies..."
+apt-get update && apt-get install -y build-essential || echo "System dependencies already available"
+
+# Install Python dependencies with pre-compiled wheels only
+echo "📦 Installing Python dependencies (pre-compiled wheels only)..."
+pip install --no-cache-dir --only-binary :all: -r requirements.txt
 
 # Create necessary directories
 echo "📁 Creating necessary directories..."
