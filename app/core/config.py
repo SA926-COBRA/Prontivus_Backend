@@ -71,7 +71,7 @@ class Settings(BaseSettings):
     
     # CORS
     ALLOWED_ORIGINS: List[str] = ["*"]  # Temporarily allow all origins for testing
-    ALLOWED_HOSTS: List[str] = ["*"]
+    ALLOWED_HOSTS: List[str] = ["*", "prontivus-backend-pa1e.onrender.com", "localhost", "127.0.0.1"]
     
     @field_validator('ALLOWED_ORIGINS', mode='before')
     @classmethod

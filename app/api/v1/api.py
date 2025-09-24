@@ -24,5 +24,6 @@ api_router.include_router(patients.router, prefix="/patients", tags=["patients"]
 api_router.include_router(secretary_simple.router, prefix="/secretary", tags=["secretary"])
 api_router.include_router(doctors.router, prefix="/doctors", tags=["doctors"])
 
-# Temporarily commented out endpoints with AuthService import issues
+# Include all endpoint routers
+api_router.include_router(licenses.router, prefix="/licenses", tags=["licenses"])
 api_router.include_router(units.router, prefix="/units", tags=["units"])
