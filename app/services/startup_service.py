@@ -138,15 +138,30 @@ class DatabaseStartupService:
         """Create tables if they don't exist"""
         try:
             logger.info("📊 Creating database tables...")
-            create_tables()
             
-            # Force commit to ensure tables are available
-            from app.database.database import get_engine
+            # Import all models to ensure they're registered
+            from app.models import user, patient, appointment, medical_record, prescription, tenant, license, financial, secretary, audit
+            
+            # Create tables with explicit transaction handling
+            from app.database.database import get_engine, Base
             engine = get_engine()
-            with engine.connect() as conn:
-                conn.commit()
             
-            logger.info("✅ Database tables created successfully")
+            with engine.begin() as conn:
+                # Create all tables in a single transaction
+                Base.metadata.create_all(bind=conn)
+                logger.info("✅ Database tables created successfully")
+            
+            # Verify tables were created
+            inspector = inspect(engine)
+            existing_tables = inspector.get_table_names()
+            required_tables = ['users', 'patients', 'appointments', 'medical_records', 'prescriptions', 'tenants']
+            missing_tables = [table for table in required_tables if table not in existing_tables]
+            
+            if missing_tables:
+                logger.warning(f"⚠️ Some tables still missing after creation: {missing_tables}")
+                return False
+            
+            logger.info("✅ All required tables verified")
             return True
             
         except Exception as e:
@@ -156,6 +171,7 @@ class DatabaseStartupService:
     def create_default_data_if_empty(self) -> bool:
         """Create default data if database is empty"""
         try:
+            import time
             from app.database.database import get_session_local
             from app.models.user import User, Role, UserRole
             from app.models.patient import Patient
@@ -166,6 +182,9 @@ class DatabaseStartupService:
             from passlib.context import CryptContext
             from datetime import datetime
             from sqlalchemy import text
+            
+            # Small delay to ensure tables are fully committed
+            time.sleep(0.5)
             
             SessionLocal = get_session_local()
             db = SessionLocal()
@@ -188,24 +207,38 @@ class DatabaseStartupService:
                 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
                 
                 # Create default tenant
-                tenant = Tenant(
-                    name="Prontivus Clinic",
-                    legal_name="Prontivus Clinic Ltda",
-                    type="clinic",
-                    status="active",
-                    email="admin@prontivus.com",
-                    phone="(11) 99999-9999",
-                    website="https://prontivus.com",
-                    address_line1="Rua das Flores, 123",
-                    city="São Paulo",
-                    state="SP",
-                    postal_code="01234-567",
-                    country="Brazil",
-                    created_at=datetime.now()
-                )
-                db.add(tenant)
-                db.flush()
-                logger.info("✅ Created default tenant")
+                try:
+                    tenant = Tenant(
+                        name="Prontivus Clinic",
+                        legal_name="Prontivus Clinic Ltda",
+                        type="clinic",
+                        status="active",
+                        email="admin@prontivus.com",
+                        phone="(11) 99999-9999",
+                        website="https://prontivus.com",
+                        address_line1="Rua das Flores, 123",
+                        city="São Paulo",
+                        state="SP",
+                        postal_code="01234-567",
+                        country="Brazil",
+                        created_at=datetime.now()
+                    )
+                    db.add(tenant)
+                    db.flush()
+                    logger.info("✅ Created default tenant")
+                except Exception as e:
+                    logger.error(f"❌ Failed to create tenant: {e}")
+                    # Try to get existing tenant or create a minimal one
+                    try:
+                        existing_tenant = db.query(Tenant).first()
+                        if existing_tenant:
+                            tenant = existing_tenant
+                            logger.info("✅ Using existing tenant")
+                        else:
+                            raise Exception("No tenant available and cannot create one")
+                    except Exception:
+                        logger.error("❌ Cannot proceed without tenant - skipping default data creation")
+                        return False
                 
                 # Create default roles
                 roles_data = [
@@ -320,11 +353,11 @@ class DatabaseStartupService:
                 
                 # Create sample appointment
                 appointment_data = {
+                    "tenant_id": tenant.id,
                     "patient_id": patient.id,
                     "doctor_id": created_users["doctor"].id,
-                    "appointment_date": "2024-01-20",
-                    "appointment_time": "14:00",
-                    "type": "Consulta",
+                    "appointment_date": datetime(2024, 1, 20, 14, 0),  # Combined date and time
+                    "type": "consultation",
                     "status": "scheduled",
                     "notes": "Consulta de rotina"
                 }

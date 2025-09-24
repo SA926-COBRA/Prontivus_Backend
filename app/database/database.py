@@ -10,9 +10,7 @@ import os
 from typing import Generator
 
 from app.core.config import settings
-
-# Create base class for models
-Base = declarative_base()
+from app.models.base import Base
 
 # Global variables for engine and session
 engine = None
