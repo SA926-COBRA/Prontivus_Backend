@@ -10,7 +10,7 @@ passlib[bcrypt]==1.7.4
 python-decouple==3.8
 
 # Database - Python 3.13 compatible versions
-sqlalchemy==2.0.23
+sqlalchemy==2.0.36
 alembic==1.12.1
 psycopg2-binary==2.9.10
 asyncpg==0.30.0
