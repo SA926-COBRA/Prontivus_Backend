@@ -19,6 +19,7 @@ asyncpg==0.30.0
 cryptography==41.0.7
 pyotp==2.9.0
 qrcode[pil]==7.4.2
+PyJWT==2.8.0
 
 # HTTP and API
 httpx==0.25.2
