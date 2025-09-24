@@ -74,11 +74,9 @@ async def login(
                 detail="Account is deactivated"
             )
         
-        # Verify password using SHA-256 (our database format)
-        import hashlib
-        password_hash = hashlib.sha256(login_data.password.encode()).hexdigest()
-        
-        if password_hash != user.hashed_password:
+        # Verify password using bcrypt (our database format)
+        auth_service = AuthService(db)
+        if not auth_service.verify_password(login_data.password, user.hashed_password):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid credentials"
@@ -271,6 +269,33 @@ async def reset_password(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Password reset failed: {str(e)}"
+        )
+
+@router.post("/debug/password-test", response_model=dict)
+async def debug_password_test(
+    test_data: dict,
+    db: Session = Depends(get_db)
+) -> Any:
+    """Debug endpoint to test password verification"""
+    try:
+        auth_service = AuthService(db)
+        
+        # Test password hashing and verification
+        test_password = test_data.get("password", "test123")
+        hashed = auth_service.get_password_hash(test_password)
+        verified = auth_service.verify_password(test_password, hashed)
+        
+        return {
+            "original_password": test_password,
+            "hashed_password": hashed,
+            "verification_result": verified,
+            "message": "Password test completed"
+        }
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Password test failed: {str(e)}"
         )
 
 @router.post("/change-password", response_model=dict)

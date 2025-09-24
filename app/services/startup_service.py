@@ -203,8 +203,8 @@ class DatabaseStartupService:
                 
                 logger.info("📊 Creating default data...")
                 
-                # Password hashing
-                pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+                # Password hashing - use same configuration as AuthService
+                pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto", bcrypt__rounds=12)
                 
                 # Create default tenant
                 try:
@@ -259,6 +259,7 @@ class DatabaseStartupService:
                 # Create default users
                 users_data = [
                     {
+                        "tenant_id": tenant.id,
                         "email": "admin@prontivus.com",
                         "username": "admin",
                         "full_name": "System Administrator",
@@ -269,6 +270,7 @@ class DatabaseStartupService:
                         "role": "admin"
                     },
                     {
+                        "tenant_id": tenant.id,
                         "email": "doctor@prontivus.com",
                         "username": "doctor",
                         "full_name": "Dr. João Silva",
@@ -281,6 +283,7 @@ class DatabaseStartupService:
                         "role": "doctor"
                     },
                     {
+                        "tenant_id": tenant.id,
                         "email": "secretary@prontivus.com",
                         "username": "secretary",
                         "full_name": "Maria Santos",
@@ -291,6 +294,7 @@ class DatabaseStartupService:
                         "role": "secretary"
                     },
                     {
+                        "tenant_id": tenant.id,
                         "email": "patient@prontivus.com",
                         "username": "patient",
                         "full_name": "Ana Costa",
