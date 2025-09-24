@@ -37,6 +37,7 @@ redis==5.0.1
 # Monitoring and logging
 structlog==23.2.0
 sentry-sdk[fastapi]==1.38.0
+psutil==5.9.8
 
 # Medical specific
 python-dateutil==2.8.2
