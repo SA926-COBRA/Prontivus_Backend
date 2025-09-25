@@ -3,7 +3,7 @@ API v1 router configuration
 """
 
 from fastapi import APIRouter
-from app.api.v1.endpoints import auth_db_only, patient_auth, appointments, medical_records, prescriptions, notifications, database, documents, patient_calls, financial, patients, secretary_simple, doctors, licenses, units, security, users
+from app.api.v1.endpoints import auth_db_only, patient_auth, appointments, medical_records, prescriptions, notifications, database, documents, patient_calls, financial, patients, secretary_simple, doctors, licenses, units, security, users, user_lookup
 # Temporarily commented out endpoints with AuthService import issues
 # from app.api.v1.endpoints import licenses, secretary
 
@@ -29,3 +29,4 @@ api_router.include_router(licenses.router, prefix="/licenses", tags=["licenses"]
 api_router.include_router(units.router, prefix="/units", tags=["units"])
 api_router.include_router(security.router, prefix="/security", tags=["security"])
 api_router.include_router(users.router, prefix="/users", tags=["users"])
+api_router.include_router(user_lookup.router, prefix="/user-lookup", tags=["user-lookup"])
