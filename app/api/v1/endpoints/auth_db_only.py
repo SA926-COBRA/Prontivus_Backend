@@ -152,13 +152,22 @@ async def register_staff(
         print(f"Registration request received: {staff_data}")
         auth_service = AuthService(db)
         
-        # Check if user already exists
+        # Check if user already exists by email
         existing_user = auth_service.get_user_by_email(staff_data.email)
         if existing_user:
             print(f"User already exists: {staff_data.email}")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="User with this email already exists"
+            )
+        
+        # Check if username already exists
+        existing_username = auth_service.get_user_by_username(staff_data.username)
+        if existing_username:
+            print(f"Username already exists: {staff_data.username}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Username already taken. Please choose a different username"
             )
         
         print(f"Creating staff user for: {staff_data.email}")
