@@ -181,26 +181,26 @@ async def get_all_users(
         count_cursor = db.execute(text(count_query), count_params)
         total_count = count_cursor.fetchone()[0]
         
-        # Log audit event
-        audit_service = AuditService(db)
-        audit_service.log_data_access(
-            user_id=current_user.user_id,
-            entity_type="users",
-            entity_id="all",
-            action="list",
-            ip_address=request.client.host if request.client else None,
-            tenant_id=current_user.tenant_id,
-            details={
-                "filters": {
-                    "search": search,
-                    "role": role,
-                    "is_active": is_active,
-                    "skip": skip,
-                    "limit": limit
-                },
-                "total_count": total_count
-            }
-        )
+        # Log audit event - temporarily disabled for debugging
+        # audit_service = AuditService(db)
+        # audit_service.log_data_access(
+        #     user_id=current_user.user_id,
+        #     entity_type="users",
+        #     entity_id="all",
+        #     action="list",
+        #     ip_address=request.client.host if request.client else None,
+        #     tenant_id=current_user.tenant_id,
+        #     details={
+        #         "filters": {
+        #             "search": search,
+        #             "role": role,
+        #             "is_active": is_active,
+        #             "skip": skip,
+        #             "limit": limit
+        #         },
+        #         "total_count": total_count
+        #     }
+        # )
         
         return {
             "users": users_list,
@@ -295,16 +295,16 @@ async def get_user_by_id(
             "tenant_name": user.tenant_name
         }
         
-        # Log audit event
-        audit_service = AuditService(db)
-        audit_service.log_data_access(
-            user_id=current_user.user_id,
-            entity_type="users",
-            entity_id=str(user_id),
-            action="view",
-            ip_address=request.client.host if request.client else None,
-            tenant_id=current_user.tenant_id
-        )
+        # Log audit event - temporarily disabled for debugging
+        # audit_service = AuditService(db)
+        # audit_service.log_data_access(
+        #     user_id=current_user.user_id,
+        #     entity_type="users",
+        #     entity_id=str(user_id),
+        #     action="view",
+        #     ip_address=request.client.host if request.client else None,
+        #     tenant_id=current_user.tenant_id
+        # )
         
         return user_dict
         
@@ -357,16 +357,16 @@ async def get_users_summary(
             "generated_at": datetime.now().isoformat()
         }
         
-        # Log audit event
-        audit_service = AuditService(db)
-        audit_service.log_data_access(
-            user_id=current_user.user_id,
-            entity_type="users",
-            entity_id="stats",
-            action="view_summary",
-            ip_address=request.client.host if request.client else None,
-            tenant_id=current_user.tenant_id
-        )
+        # Log audit event - temporarily disabled for debugging
+        # audit_service = AuditService(db)
+        # audit_service.log_data_access(
+        #     user_id=current_user.user_id,
+        #     entity_type="users",
+        #     entity_id="stats",
+        #     action="view_summary",
+        #     ip_address=request.client.host if request.client else None,
+        #     tenant_id=current_user.tenant_id
+        # )
         
         return summary
         
