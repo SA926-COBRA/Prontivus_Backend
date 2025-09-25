@@ -494,7 +494,13 @@ class AuthService:
     
     def get_user_by_username(self, username: str) -> Optional[User]:
         """Get user by username"""
-        return self.db.query(User).filter(User.username == username).first()
+        if not username:
+            return None
+        try:
+            return self.db.query(User).filter(User.username == username).first()
+        except Exception as e:
+            print(f"Error querying username {username}: {e}")
+            return None
     
     def get_user_by_cpf(self, cpf: str) -> Optional[User]:
         """Get user by CPF"""
