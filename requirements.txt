@@ -20,6 +20,8 @@ cryptography==41.0.7
 pyotp==2.9.0
 qrcode[pil]==7.4.2
 PyJWT==2.8.0
+bcrypt==4.1.2
+argon2-cffi==21.3.0
 
 # HTTP and API
 httpx==0.25.2

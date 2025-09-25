@@ -9,8 +9,10 @@ import os
 import logging
 
 from app.core.config import settings
+from app.core.security_config import security_settings
 from app.database.database import test_connection
 from app.services.startup_service import startup_service
+from app.middleware.security_middleware import setup_security_middleware
 
 # Configure logging
 logging.basicConfig(
@@ -27,6 +29,21 @@ app = FastAPI(
     docs_url="/docs" if settings.DEBUG else None,
     redoc_url="/redoc" if settings.DEBUG else None
 )
+
+# Security middleware setup
+if security_settings.ENVIRONMENT == "production":
+    logger.info("🔒 Setting up production security middleware")
+    setup_security_middleware(app)
+else:
+    logger.info("🔧 Development mode - basic security middleware")
+    # Basic CORS for development
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],  # Allow all origins in development
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 # CORS middleware
 logger.info(f"🌐 CORS Configuration: {settings.ALLOWED_ORIGINS}")
