@@ -30,20 +30,30 @@ app = FastAPI(
     redoc_url="/redoc" if settings.DEBUG else None
 )
 
-# Security middleware setup
-if security_settings.ENVIRONMENT == "production":
-    logger.info("🔒 Setting up production security middleware")
-    setup_security_middleware(app)
-else:
-    logger.info("🔧 Development mode - basic security middleware")
-    # Basic CORS for development
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["*"],  # Allow all origins in development
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+# Security middleware setup - temporarily disabled for debugging
+# if security_settings.ENVIRONMENT == "production":
+#     logger.info("🔒 Setting up production security middleware")
+#     setup_security_middleware(app)
+# else:
+#     logger.info("🔧 Development mode - basic security middleware")
+#     # Basic CORS for development
+#     app.add_middleware(
+#         CORSMiddleware,
+#         allow_origins=["*"],  # Allow all origins in development
+#         allow_credentials=True,
+#         allow_methods=["*"],
+#         allow_headers=["*"],
+#     )
+
+logger.info("🔧 Development mode - basic security middleware")
+# Basic CORS for development
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins in development
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # CORS middleware
 logger.info(f"🌐 CORS Configuration: {settings.ALLOWED_ORIGINS}")
