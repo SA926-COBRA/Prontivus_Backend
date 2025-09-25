@@ -149,18 +149,22 @@ async def register_staff(
 ) -> Any:
     """Register staff member - Database only"""
     try:
+        print(f"Registration request received: {staff_data}")
         auth_service = AuthService(db)
         
         # Check if user already exists
         existing_user = auth_service.get_user_by_email(staff_data.email)
         if existing_user:
+            print(f"User already exists: {staff_data.email}")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="User with this email already exists"
             )
         
+        print(f"Creating staff user for: {staff_data.email}")
         # Create new staff user
         user = auth_service.create_staff_user(staff_data)
+        print(f"Staff user created successfully: {user.id}")
         
         return {
             "message": "Staff member created successfully",
@@ -172,6 +176,9 @@ async def register_staff(
     except HTTPException:
         raise
     except Exception as e:
+        print(f"Registration error: {str(e)}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Registration failed: {str(e)}"
