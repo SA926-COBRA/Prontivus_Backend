@@ -98,11 +98,9 @@ async def patient_login(
                 detail="Access denied. This portal is only for patients. Staff members should use the main system."
             )
 
-        # Verify password using SHA-256 (our database format)
-        import hashlib
-        password_hash = hashlib.sha256(login_data.password.encode()).hexdigest()
-
-        if password_hash != user.hashed_password:
+        # Verify password using bcrypt (our database format)
+        auth_service = AuthService(db)
+        if not auth_service.verify_password(login_data.password, user.hashed_password):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid credentials"
