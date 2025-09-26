@@ -111,7 +111,7 @@ python-dateutil==2.8.2
 
 # Health Plans and Telemedicine Integration
 websockets==12.0
-aiohttp==3.9.1
+aiohttp==3.12.15
 httpx==0.25.2
 # pydantic-settings==2.1.0  # Duplicate - already specified above
 python-multipart==0.0.6
