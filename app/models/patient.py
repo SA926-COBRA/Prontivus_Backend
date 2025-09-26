@@ -93,6 +93,8 @@ class Patient(Base):
     # exams = relationship("PatientExam", back_populates="patient")
     # billings = relationship("Billing", back_populates="patient")
     # accounts_receivable = relationship("AccountsReceivable", back_populates="patient")
+    surgical_estimates = relationship("SurgicalEstimate", back_populates="patient")
+    surgical_contracts = relationship("SurgicalContract", back_populates="patient")
 
 
 
