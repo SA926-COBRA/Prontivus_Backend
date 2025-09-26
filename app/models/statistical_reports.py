@@ -84,7 +84,7 @@ class StatisticalReport(Base):
 
 class ReportTemplate(Base):
     """Report templates for consistent formatting"""
-    __tablename__ = "report_templates"
+    __tablename__ = "statistical_report_templates"
     
     id = Column(Integer, primary_key=True, index=True)
     template_name = Column(String(200), nullable=False)
@@ -207,7 +207,7 @@ class ReportMetricValue(Base):
     
     # Additional Data
     raw_data = Column(JSON, nullable=True)  # Raw data used for calculation
-    metadata = Column(JSON, nullable=True)  # Additional metadata
+    report_metadata = Column(JSON, nullable=True)  # Additional metadata
     
     # Comparison Data
     previous_value = Column(Numeric(15, 4), nullable=True)
@@ -255,7 +255,7 @@ class ReportDashboard(Base):
 
 class ReportAccessLog(Base):
     """Access logs for reports and dashboards"""
-    __tablename__ = "report_access_logs"
+    __tablename__ = "statistical_report_access_logs"
     
     id = Column(Integer, primary_key=True, index=True)
     
@@ -286,7 +286,7 @@ class ReportAccessLog(Base):
 
 class ReportSchedule(Base):
     """Scheduled report generation"""
-    __tablename__ = "report_schedules"
+    __tablename__ = "statistical_report_schedules"
     
     id = Column(Integer, primary_key=True, index=True)
     report_id = Column(Integer, ForeignKey("statistical_reports.id"), nullable=False)

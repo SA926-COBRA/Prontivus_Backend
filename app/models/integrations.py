@@ -211,7 +211,7 @@ class IntegrationSyncLog(Base):
     
     # Additional Data
     sync_data = Column(JSON, nullable=True)
-    metadata = Column(JSON, nullable=True)
+    sync_metadata = Column(JSON, nullable=True)
     
     # Metadata
     created_at = Column(DateTime(timezone=True), server_default=func.now())

@@ -84,7 +84,7 @@ class LicenseEntitlement(Base):
 
 class Payment(Base):
     """Payment model"""
-    __tablename__ = "payments"
+    __tablename__ = "license_payments"
     
     id = Column(Integer, primary_key=True, index=True)
     tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=False)
@@ -111,7 +111,7 @@ class Payment(Base):
 
 class Invoice(Base):
     """Invoice model"""
-    __tablename__ = "invoices"
+    __tablename__ = "license_invoices"
     
     id = Column(Integer, primary_key=True, index=True)
     tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=False)

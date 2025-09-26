@@ -305,7 +305,7 @@ class AIUsageLog(Base):
     cost_per_token = Column(Numeric(10, 6), nullable=True)
     
     # Additional Data
-    metadata = Column(JSON, nullable=True)
+    usage_metadata = Column(JSON, nullable=True)
     
     # Relationships
     configuration = relationship("AIConfiguration")
