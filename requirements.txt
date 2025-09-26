@@ -126,7 +126,7 @@ anthropic>=0.67.0
 transformers>=4.41.0
 # torch==2.1.2  # Duplicate - already specified above
 sentence-transformers==5.1.1
-spacy==3.7.2
+spacy==3.8.7
 nltk==3.8.1
 textblob==0.17.1
 langchain==0.3.27
