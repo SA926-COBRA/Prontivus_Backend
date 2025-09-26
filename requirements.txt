@@ -92,7 +92,7 @@ pillow==11.3.0
 
 # Financial and TISS Integration
 xmltodict==0.13.0
-lxml==4.9.3
+lxml==6.0.2
 requests==2.31.0
 zeep==4.2.1
 suds-py3==1.4.5.0
