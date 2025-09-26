@@ -126,10 +126,10 @@ class DatabaseStartupService:
                     logger.info(f"🌐 Database '{db_name}' created successfully")
                     return True
                     
-        except Exception as e:
+            except Exception as e:
                 logger.error(f"❌ Failed to create PostgreSQL database: {e}")
-            return False
-    
+                return False
+                
         except Exception as e:
             logger.error(f"❌ Database creation failed: {e}")
             return False
@@ -196,8 +196,8 @@ class DatabaseStartupService:
                     user_count = result.scalar()
                     if user_count > 0:
                         logger.info(f"📊 Database already contains {user_count} users - skipping default data creation")
-            return True
-        except Exception as e:
+                        return True
+                except Exception as e:
                     # If users table doesn't exist or has issues, proceed with data creation
                     logger.info("📊 Users table not accessible - proceeding with default data creation")
                 
@@ -234,11 +234,11 @@ class DatabaseStartupService:
                         if existing_tenant:
                             tenant = existing_tenant
                             logger.info("✅ Using existing tenant")
-            else:
+                        else:
                             raise Exception("No tenant available and cannot create one")
                     except Exception:
                         logger.error("❌ Cannot proceed without tenant - skipping default data creation")
-            return False
+                        return False
     
                 # Create default roles
                 roles_data = [
@@ -459,7 +459,7 @@ class DatabaseStartupService:
             try:
                 self.create_default_data_if_empty()
                 logger.info("✅ Default data creation completed")
-        except Exception as e:
+            except Exception as e:
                 logger.warning(f"⚠️ Default data creation skipped: {e}")
                 logger.info("📊 Database is ready for deployment without default data")
             

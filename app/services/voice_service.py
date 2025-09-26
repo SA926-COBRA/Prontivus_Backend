@@ -13,8 +13,8 @@ import json
 # import openai_whisper as whisper  # Disabled for Python 3.13 compatibility
 # import torch  # Disabled for Python 3.13 compatibility
 # import torchaudio  # Disabled for Python 3.13 compatibility
-from pydub import AudioSegment
-from pydub.utils import which
+# from pydub import AudioSegment  # Disabled for Python 3.13 compatibility (audioop module removed)
+# from pydub.utils import which  # Disabled for Python 3.13 compatibility
 import numpy as np
 
 from sqlalchemy.orm import Session
@@ -175,8 +175,9 @@ class VoiceProcessingService:
     def _assess_audio_quality(self, audio_path: str) -> VoiceQualityAssessment:
         """Assess the quality of uploaded audio"""
         try:
-            # Load audio file
-            audio = AudioSegment.from_file(audio_path)
+            # Load audio file (disabled for Python 3.13 compatibility)
+            # audio = AudioSegment.from_file(audio_path)
+            raise RuntimeError("Audio quality assessment disabled due to Python 3.13 compatibility issues")
             
             # Calculate basic quality metrics
             duration = len(audio) / 1000.0  # Convert to seconds
