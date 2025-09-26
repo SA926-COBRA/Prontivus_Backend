@@ -63,9 +63,9 @@ markupsafe==3.0.2
 
 # Voice Processing and Speech Recognition
 speechrecognition==3.10.0
-pyaudio==0.2.12
+pyaudio==0.2.14
 pydub==0.25.1
-openai==1.3.7
+openai>=1.104.2
 openai-whisper
 torch==2.1.1
 torchaudio==2.1.1
@@ -121,18 +121,18 @@ celery==5.3.4
 flower==2.0.1
 
 # AI Integration and Natural Language Processing
-openai==1.3.7
-anthropic==0.7.8
+openai>=1.104.2
+anthropic>=0.67.0
 transformers>=4.41.0
 # torch==2.1.2  # Duplicate - already specified above
 sentence-transformers==5.1.1
 spacy==3.7.2
 nltk==3.8.1
 textblob==0.17.1
-langchain==0.0.350
-langchain-openai==0.0.2
-langchain-anthropic==0.0.1
-tiktoken==0.5.2
+langchain==0.3.27
+langchain-openai==0.3.33
+langchain-anthropic==0.3.20
+tiktoken>=0.7
 
 # Development
 pytest==7.4.3
