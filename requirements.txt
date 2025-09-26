@@ -61,6 +61,15 @@ weasyprint==60.2
 jinja2==3.1.2
 markupsafe==2.1.3
 
+# Voice Processing and Speech Recognition
+speechrecognition==3.10.0
+pyaudio==0.2.11
+pydub==0.25.1
+openai==1.3.7
+whisper==1.1.10
+torch==2.1.1
+torchaudio==2.1.1
+
 # Development
 pytest==7.4.3
 pytest-asyncio==0.21.1
