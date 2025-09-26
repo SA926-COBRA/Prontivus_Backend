@@ -63,7 +63,7 @@ markupsafe==3.0.2
 
 # Voice Processing and Speech Recognition
 speechrecognition==3.10.0
-pyaudio==0.2.14
+# pyaudio==0.2.14  # Requires system audio libraries - not available in deployment environment
 pydub==0.25.1
 openai>=1.104.2
 openai-whisper
