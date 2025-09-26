@@ -53,7 +53,7 @@ phonenumbers==9.0.14
 # Excel Generation and Data Processing
 openpyxl==3.1.2
 xlsxwriter==3.1.9
-pandas==2.1.4
+pandas==2.2.3
 numpy==1.24.4
 
 # Additional PDF and Document Processing
@@ -63,10 +63,10 @@ markupsafe==2.1.3
 
 # Voice Processing and Speech Recognition
 speechrecognition==3.10.0
-pyaudio==0.2.11
+pyaudio==0.2.12
 pydub==0.25.1
 openai==1.3.7
-whisper==1.1.10
+openai-whisper
 torch==2.1.1
 torchaudio==2.1.1
 
@@ -81,13 +81,13 @@ scipy==1.11.4
 statsmodels==0.14.0
 
 # Advanced EMR and Medical Standards
-icd10-cm==2023.1.0
-icd10-pcs==2023.1.0
-snomed-ct==1.0.0
-loinc==2.72
-hl7-fhir==4.0.1
+icd10-cm==0.0.5
+# icd10-pcs==2023.1.0  # Not available on PyPI
+# snomed-ct==1.0.0      # Not available on PyPI
+# loinc==2.72           # Not available on PyPI
+# hl7-fhir==4.0.1       # Not available on PyPI
 hl7apy==1.3.4
-pydicom==2.4.3
+pydicom
 pillow==10.1.0
 
 # Financial and TISS Integration
@@ -95,12 +95,12 @@ xmltodict==0.13.0
 lxml==4.9.3
 requests==2.31.0
 zeep==4.2.1
-suds-py3==1.4.1.0
-xmlsec==1.3.13
+suds-py3==1.4.5.0
+xmlsec==1.3.16
 cryptography==41.0.7
 
 # Statistical Reports and Analytics
-pandas==2.1.4
+pandas==2.2.3
 numpy==1.24.4
 reportlab==4.0.7
 openpyxl==3.1.2
@@ -113,9 +113,9 @@ python-dateutil==2.8.2
 websockets==12.0
 aiohttp==3.9.1
 httpx==0.25.2
-pydantic-settings==2.1.0
+# pydantic-settings==2.1.0  # Duplicate - already specified above
 python-multipart==0.0.6
-fastapi-websocket==0.1.3
+# fastapi-websocket==0.1.3  # Not available on PyPI
 redis==5.0.1
 celery==5.3.4
 flower==2.0.1
@@ -124,8 +124,8 @@ flower==2.0.1
 openai==1.3.7
 anthropic==0.7.8
 transformers==4.36.2
-torch==2.1.2
-sentence-transformers==2.2.2
+# torch==2.1.2  # Duplicate - already specified above
+sentence-transformers==5.1.1
 spacy==3.7.2
 nltk==3.8.1
 textblob==0.17.1
