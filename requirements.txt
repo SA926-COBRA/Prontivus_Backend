@@ -80,6 +80,16 @@ dash-bootstrap-components==1.5.0
 scipy==1.11.4
 statsmodels==0.14.0
 
+# Advanced EMR and Medical Standards
+icd10-cm==2023.1.0
+icd10-pcs==2023.1.0
+snomed-ct==1.0.0
+loinc==2.72
+hl7-fhir==4.0.1
+hl7apy==1.3.4
+pydicom==2.4.3
+pillow==10.1.0
+
 # Development
 pytest==7.4.3
 pytest-asyncio==0.21.1
