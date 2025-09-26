@@ -48,7 +48,7 @@ class StatisticalReportBase(BaseModel):
     date_range_start: Optional[date] = None
     date_range_end: Optional[date] = None
     frequency: ReportFrequency = ReportFrequency.ONCE
-    scheduled_time: Optional[str] = Field(None, regex="^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$")
+    scheduled_time: Optional[str] = Field(None, pattern="^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$")
     auto_generate: bool = False
 
 class StatisticalReportCreate(StatisticalReportBase):
@@ -66,7 +66,7 @@ class StatisticalReportUpdate(BaseModel):
     date_range_start: Optional[date] = None
     date_range_end: Optional[date] = None
     frequency: Optional[ReportFrequency] = None
-    scheduled_time: Optional[str] = Field(None, regex="^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$")
+    scheduled_time: Optional[str] = Field(None, pattern="^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$")
     auto_generate: Optional[bool] = None
 
 class StatisticalReport(StatisticalReportBase):
@@ -95,7 +95,7 @@ class ReportTemplateBase(BaseModel):
     header_template: Optional[str] = None
     footer_template: Optional[str] = None
     page_size: str = Field("A4", max_length=20)
-    orientation: str = Field("portrait", regex="^(portrait|landscape)$")
+    orientation: str = Field("portrait", pattern="^(portrait|landscape)$")
     margins: Optional[Dict[str, Any]] = None
     default_parameters: Optional[Dict[str, Any]] = None
     default_filters: Optional[Dict[str, Any]] = None
@@ -112,7 +112,7 @@ class ReportTemplateUpdate(BaseModel):
     header_template: Optional[str] = None
     footer_template: Optional[str] = None
     page_size: Optional[str] = Field(None, max_length=20)
-    orientation: Optional[str] = Field(None, regex="^(portrait|landscape)$")
+    orientation: Optional[str] = Field(None, pattern="^(portrait|landscape)$")
     margins: Optional[Dict[str, Any]] = None
     default_parameters: Optional[Dict[str, Any]] = None
     default_filters: Optional[Dict[str, Any]] = None
@@ -227,7 +227,7 @@ class ReportMetricValueBase(BaseModel):
     metadata: Optional[Dict[str, Any]] = None
     previous_value: Optional[Decimal] = None
     change_percentage: Optional[float] = None
-    trend_direction: Optional[str] = Field(None, regex="^(up|down|stable)$")
+    trend_direction: Optional[str] = Field(None, pattern="^(up|down|stable)$")
 
 class ReportMetricValueCreate(ReportMetricValueBase):
     pass
@@ -241,7 +241,7 @@ class ReportMetricValueUpdate(BaseModel):
     metadata: Optional[Dict[str, Any]] = None
     previous_value: Optional[Decimal] = None
     change_percentage: Optional[float] = None
-    trend_direction: Optional[str] = Field(None, regex="^(up|down|stable)$")
+    trend_direction: Optional[str] = Field(None, pattern="^(up|down|stable)$")
 
 class ReportMetricValue(ReportMetricValueBase):
     id: int
@@ -317,7 +317,7 @@ class ReportAccessLog(ReportAccessLogBase):
 class ReportScheduleBase(BaseModel):
     report_id: int
     frequency: ReportFrequency
-    scheduled_time: Optional[str] = Field(None, regex="^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$")
+    scheduled_time: Optional[str] = Field(None, pattern="^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$")
     timezone: str = Field("UTC", max_length=50)
     start_date: date
     end_date: Optional[date] = None
@@ -336,7 +336,7 @@ class ReportScheduleCreate(ReportScheduleBase):
 
 class ReportScheduleUpdate(BaseModel):
     frequency: Optional[ReportFrequency] = None
-    scheduled_time: Optional[str] = Field(None, regex="^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$")
+    scheduled_time: Optional[str] = Field(None, pattern="^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$")
     timezone: Optional[str] = Field(None, max_length=50)
     start_date: Optional[date] = None
     end_date: Optional[date] = None

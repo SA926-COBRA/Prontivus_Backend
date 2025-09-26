@@ -526,7 +526,7 @@ async def get_billing_dashboard(
 
 @router.get("/revenue-expense-chart", response_model=RevenueExpenseChartResponse)
 async def get_revenue_expense_chart(
-    period: str = Query("monthly", regex="^(daily|weekly|monthly|yearly)$"),
+    period: str = Query("monthly", pattern="^(daily|weekly|monthly|yearly)$"),
     months: int = Query(12, ge=1, le=24),
     current_user=Depends(get_current_user_flexible),
     db: Session = Depends(get_db)

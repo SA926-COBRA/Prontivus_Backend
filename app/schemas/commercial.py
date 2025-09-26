@@ -101,7 +101,7 @@ class SurgicalEstimateBase(BaseModel):
     procedure_id: int
     doctor_id: int
     estimated_date: Optional[datetime] = None
-    priority: str = Field("normal", regex="^(low|normal|high|urgent)$")
+    priority: str = Field("normal", pattern="^(low|normal|high|urgent)$")
     base_price: float = Field(..., gt=0)
     additional_fees: float = Field(0, ge=0)
     discount_percentage: float = Field(0, ge=0, le=100)
@@ -122,7 +122,7 @@ class SurgicalEstimateCreate(SurgicalEstimateBase):
 
 class SurgicalEstimateUpdate(BaseModel):
     estimated_date: Optional[datetime] = None
-    priority: Optional[str] = Field(None, regex="^(low|normal|high|urgent)$")
+    priority: Optional[str] = Field(None, pattern="^(low|normal|high|urgent)$")
     additional_fees: Optional[float] = Field(None, ge=0)
     discount_percentage: Optional[float] = Field(None, ge=0, le=100)
     discount_amount: Optional[float] = Field(None, ge=0)
@@ -163,7 +163,7 @@ class SurgicalContractBase(BaseModel):
     patient_id: int
     procedure_id: int
     doctor_id: int
-    contract_type: str = Field("standard", regex="^(standard|emergency|package)$")
+    contract_type: str = Field("standard", pattern="^(standard|emergency|package)$")
     total_amount: float = Field(..., gt=0)
     payment_schedule: Optional[List[ContractPaymentSchedule]] = None
     start_date: Optional[datetime] = None
@@ -180,7 +180,7 @@ class SurgicalContractCreate(SurgicalContractBase):
     pass
 
 class SurgicalContractUpdate(BaseModel):
-    contract_type: Optional[str] = Field(None, regex="^(standard|emergency|package)$")
+    contract_type: Optional[str] = Field(None, pattern="^(standard|emergency|package)$")
     total_amount: Optional[float] = Field(None, gt=0)
     payment_schedule: Optional[List[ContractPaymentSchedule]] = None
     start_date: Optional[datetime] = None
@@ -293,7 +293,7 @@ class CommercialPackage(CommercialPackageBase):
 
 # Sales target schemas
 class SalesTargetBase(BaseModel):
-    target_period: str = Field(..., regex="^(monthly|quarterly|yearly)$")
+    target_period: str = Field(..., pattern="^(monthly|quarterly|yearly)$")
     target_year: int = Field(..., ge=2020, le=2030)
     target_month: Optional[int] = Field(None, ge=1, le=12)
     target_quarter: Optional[int] = Field(None, ge=1, le=4)

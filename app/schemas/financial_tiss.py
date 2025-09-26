@@ -264,7 +264,7 @@ class TISSIntegrationBase(BaseModel):
     api_key: Optional[str] = Field(None, max_length=200)
     api_secret: Optional[str] = Field(None, max_length=200)
     tiss_version: str = Field(..., min_length=1, max_length=10)
-    submission_frequency: str = Field("daily", regex="^(daily|weekly|monthly)$")
+    submission_frequency: str = Field("daily", pattern="^(daily|weekly|monthly)$")
     auto_submission: bool = True
 
 class TISSIntegrationCreate(TISSIntegrationBase):
@@ -277,7 +277,7 @@ class TISSIntegrationUpdate(BaseModel):
     api_key: Optional[str] = Field(None, max_length=200)
     api_secret: Optional[str] = Field(None, max_length=200)
     tiss_version: Optional[str] = Field(None, min_length=1, max_length=10)
-    submission_frequency: Optional[str] = Field(None, regex="^(daily|weekly|monthly)$")
+    submission_frequency: Optional[str] = Field(None, pattern="^(daily|weekly|monthly)$")
     auto_submission: Optional[bool] = None
     is_active: Optional[bool] = None
 

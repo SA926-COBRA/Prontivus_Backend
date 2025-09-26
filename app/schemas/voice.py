@@ -24,7 +24,7 @@ class VoiceSessionBase(BaseModel):
     appointment_id: Optional[int] = None
     clinical_context: Optional[str] = None
     medical_specialty: Optional[str] = None
-    session_type: str = Field("consultation", regex="^(consultation|follow_up|procedure|emergency|other)$")
+    session_type: str = Field("consultation", pattern="^(consultation|follow_up|procedure|emergency|other)$")
     transcription_language: str = Field("pt-BR", max_length=10)
 
 class VoiceSessionCreate(VoiceSessionBase):
@@ -125,7 +125,7 @@ class VoiceTranscription(VoiceTranscriptionBase):
 # Clinical Voice Note schemas
 class ClinicalVoiceNoteBase(BaseModel):
     session_id: int
-    note_type: str = Field(..., regex="^(progress_note|assessment|plan|procedure|emergency|other)$")
+    note_type: str = Field(..., pattern="^(progress_note|assessment|plan|procedure|emergency|other)$")
     title: str = Field(..., min_length=1, max_length=200)
     content: str
     chief_complaint: Optional[str] = None
@@ -182,14 +182,14 @@ class ClinicalVoiceNote(ClinicalVoiceNoteBase):
 # Voice Processing Job schemas
 class VoiceProcessingJobBase(BaseModel):
     session_id: int
-    job_type: str = Field(..., regex="^(transcription|analysis|note_generation|quality_check)$")
+    job_type: str = Field(..., pattern="^(transcription|analysis|note_generation|quality_check)$")
     parameters: Optional[Dict[str, Any]] = None
 
 class VoiceProcessingJobCreate(VoiceProcessingJobBase):
     pass
 
 class VoiceProcessingJobUpdate(BaseModel):
-    status: Optional[str] = Field(None, regex="^(pending|running|completed|failed)$")
+    status: Optional[str] = Field(None, pattern="^(pending|running|completed|failed)$")
     progress_percentage: Optional[int] = Field(None, ge=0, le=100)
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
@@ -220,7 +220,7 @@ class VoiceProcessingJob(VoiceProcessingJobBase):
 # Voice Configuration schemas
 class VoiceConfigurationBase(BaseModel):
     config_name: str = Field(..., min_length=1, max_length=100)
-    config_type: str = Field(..., regex="^(transcription|analysis|quality|general)$")
+    config_type: str = Field(..., pattern="^(transcription|analysis|quality|general)$")
     settings: Dict[str, Any]
     is_active: bool = True
     is_default: bool = False
@@ -230,7 +230,7 @@ class VoiceConfigurationCreate(VoiceConfigurationBase):
 
 class VoiceConfigurationUpdate(BaseModel):
     config_name: Optional[str] = Field(None, min_length=1, max_length=100)
-    config_type: Optional[str] = Field(None, regex="^(transcription|analysis|quality|general)$")
+    config_type: Optional[str] = Field(None, pattern="^(transcription|analysis|quality|general)$")
     settings: Optional[Dict[str, Any]] = None
     is_active: Optional[bool] = None
     is_default: Optional[bool] = None
@@ -249,7 +249,7 @@ class VoiceConfiguration(VoiceConfigurationBase):
 # Voice Analytics schemas
 class VoiceAnalyticsBase(BaseModel):
     date: datetime
-    period_type: str = Field(..., regex="^(daily|weekly|monthly)$")
+    period_type: str = Field(..., pattern="^(daily|weekly|monthly)$")
     total_sessions: int = Field(0, ge=0)
     total_duration_minutes: float = Field(0, ge=0)
     total_transcriptions: int = Field(0, ge=0)
@@ -283,7 +283,7 @@ class VoiceSessionStartRequest(BaseModel):
     appointment_id: Optional[int] = None
     clinical_context: Optional[str] = None
     medical_specialty: Optional[str] = None
-    session_type: str = Field("consultation", regex="^(consultation|follow_up|procedure|emergency|other)$")
+    session_type: str = Field("consultation", pattern="^(consultation|follow_up|procedure|emergency|other)$")
     transcription_language: str = Field("pt-BR", max_length=10)
 
 class VoiceSessionStartResponse(BaseModel):
@@ -294,7 +294,7 @@ class VoiceSessionStartResponse(BaseModel):
 class VoiceAudioUploadRequest(BaseModel):
     session_id: str
     audio_data: str  # Base64 encoded audio data
-    audio_format: str = Field("wav", regex="^(wav|mp3|m4a|flac)$")
+    audio_format: str = Field("wav", pattern="^(wav|mp3|m4a|flac)$")
     sample_rate: Optional[int] = Field(16000, ge=8000, le=48000)
     channels: Optional[int] = Field(1, ge=1, le=2)
 
@@ -306,7 +306,7 @@ class VoiceAudioUploadResponse(BaseModel):
 
 class VoiceTranscriptionRequest(BaseModel):
     session_id: str
-    transcription_engine: str = Field("whisper", regex="^(whisper|google|azure|aws)$")
+    transcription_engine: str = Field("whisper", pattern="^(whisper|google|azure|aws)$")
     language: Optional[str] = Field("pt-BR", max_length=10)
     enable_medical_terminology: bool = True
     enable_drug_detection: bool = True
@@ -320,7 +320,7 @@ class VoiceTranscriptionResponse(BaseModel):
 
 class VoiceNoteGenerationRequest(BaseModel):
     session_id: str
-    note_type: str = Field("progress_note", regex="^(progress_note|assessment|plan|procedure|emergency|other)$")
+    note_type: str = Field("progress_note", pattern="^(progress_note|assessment|plan|procedure|emergency|other)$")
     include_ai_analysis: bool = True
     auto_extract_entities: bool = True
     generate_suggestions: bool = True
@@ -373,7 +373,7 @@ class VoiceQualityAssessment(BaseModel):
     audio_quality_score: float = Field(..., ge=0, le=1)
     background_noise_level: float = Field(..., ge=0, le=1)
     speech_clarity_score: float = Field(..., ge=0, le=1)
-    overall_quality: str = Field(..., regex="^(excellent|good|fair|poor)$")
+    overall_quality: str = Field(..., pattern="^(excellent|good|fair|poor)$")
     recommendations: List[str] = []
 
 class VoiceProcessingStatus(BaseModel):

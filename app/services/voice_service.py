@@ -10,7 +10,7 @@ from pathlib import Path
 import json
 
 import speech_recognition as sr
-import whisper
+import openai_whisper as whisper
 import torch
 import torchaudio
 from pydub import AudioSegment

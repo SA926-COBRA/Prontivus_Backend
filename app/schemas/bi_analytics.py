@@ -103,7 +103,7 @@ class MetricValue(MetricValueBase):
 # Metric Alert schemas
 class MetricAlertBase(BaseModel):
     metric_id: int
-    alert_type: str = Field(..., regex="^(warning|critical|info)$")
+    alert_type: str = Field(..., pattern="^(warning|critical|info)$")
     threshold_breached: float
     current_value: float
     message: str
@@ -112,7 +112,7 @@ class MetricAlertCreate(MetricAlertBase):
     pass
 
 class MetricAlertUpdate(BaseModel):
-    status: Optional[str] = Field(None, regex="^(active|acknowledged|resolved)$")
+    status: Optional[str] = Field(None, pattern="^(active|acknowledged|resolved)$")
     acknowledged_by: Optional[int] = None
     acknowledged_at: Optional[datetime] = None
     resolved_by: Optional[int] = None
@@ -168,7 +168,7 @@ class Dashboard(DashboardBase):
 # Dashboard Widget schemas
 class DashboardWidgetBase(BaseModel):
     dashboard_id: int
-    widget_type: str = Field(..., regex="^(chart|table|metric|kpi)$")
+    widget_type: str = Field(..., pattern="^(chart|table|metric|kpi)$")
     title: str = Field(..., min_length=1, max_length=200)
     description: Optional[str] = None
     config: Dict[str, Any]
@@ -183,7 +183,7 @@ class DashboardWidgetCreate(DashboardWidgetBase):
     pass
 
 class DashboardWidgetUpdate(BaseModel):
-    widget_type: Optional[str] = Field(None, regex="^(chart|table|metric|kpi)$")
+    widget_type: Optional[str] = Field(None, pattern="^(chart|table|metric|kpi)$")
     title: Optional[str] = Field(None, min_length=1, max_length=200)
     description: Optional[str] = None
     config: Optional[Dict[str, Any]] = None
@@ -208,12 +208,12 @@ class DashboardWidget(DashboardWidgetBase):
 class BIReportBase(BaseModel):
     report_name: str = Field(..., min_length=1, max_length=200)
     description: Optional[str] = None
-    report_type: str = Field(..., regex="^(executive|operational|clinical|financial)$")
+    report_type: str = Field(..., pattern="^(executive|operational|clinical|financial)$")
     template_config: Dict[str, Any]
     data_queries: Dict[str, Any]
     is_scheduled: bool = False
-    schedule_frequency: Optional[str] = Field(None, regex="^(daily|weekly|monthly)$")
-    schedule_time: Optional[str] = Field(None, regex="^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$")
+    schedule_frequency: Optional[str] = Field(None, pattern="^(daily|weekly|monthly)$")
+    schedule_time: Optional[str] = Field(None, pattern="^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$")
     email_recipients: Optional[List[str]] = None
     notification_enabled: bool = True
 
@@ -223,12 +223,12 @@ class BIReportCreate(BIReportBase):
 class BIReportUpdate(BaseModel):
     report_name: Optional[str] = Field(None, min_length=1, max_length=200)
     description: Optional[str] = None
-    report_type: Optional[str] = Field(None, regex="^(executive|operational|clinical|financial)$")
+    report_type: Optional[str] = Field(None, pattern="^(executive|operational|clinical|financial)$")
     template_config: Optional[Dict[str, Any]] = None
     data_queries: Optional[Dict[str, Any]] = None
     is_scheduled: Optional[bool] = None
-    schedule_frequency: Optional[str] = Field(None, regex="^(daily|weekly|monthly)$")
-    schedule_time: Optional[str] = Field(None, regex="^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$")
+    schedule_frequency: Optional[str] = Field(None, pattern="^(daily|weekly|monthly)$")
+    schedule_time: Optional[str] = Field(None, pattern="^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$")
     email_recipients: Optional[List[str]] = None
     notification_enabled: Optional[bool] = None
     is_active: Optional[bool] = None
@@ -257,7 +257,7 @@ class BIReportGenerationCreate(BIReportGenerationBase):
     pass
 
 class BIReportGenerationUpdate(BaseModel):
-    status: Optional[str] = Field(None, regex="^(pending|generating|completed|failed)$")
+    status: Optional[str] = Field(None, pattern="^(pending|generating|completed|failed)$")
     file_path: Optional[str] = None
     file_size: Optional[int] = None
     processing_time_seconds: Optional[float] = None
@@ -321,12 +321,12 @@ class PerformanceBenchmark(PerformanceBenchmarkBase):
 
 # Analytics Insight schemas
 class AnalyticsInsightBase(BaseModel):
-    insight_type: str = Field(..., regex="^(trend|anomaly|recommendation|prediction)$")
+    insight_type: str = Field(..., pattern="^(trend|anomaly|recommendation|prediction)$")
     title: str = Field(..., min_length=1, max_length=200)
     description: str
     confidence_score: float = Field(..., ge=0, le=1)
-    impact_level: str = Field(..., regex="^(low|medium|high|critical)$")
-    category: str = Field(..., regex="^(clinical|financial|operational|quality)$")
+    impact_level: str = Field(..., pattern="^(low|medium|high|critical)$")
+    category: str = Field(..., pattern="^(clinical|financial|operational|quality)$")
     related_metrics: Optional[List[int]] = None
     data_period_start: Optional[datetime] = None
     data_period_end: Optional[datetime] = None
@@ -337,18 +337,18 @@ class AnalyticsInsightCreate(AnalyticsInsightBase):
     pass
 
 class AnalyticsInsightUpdate(BaseModel):
-    insight_type: Optional[str] = Field(None, regex="^(trend|anomaly|recommendation|prediction)$")
+    insight_type: Optional[str] = Field(None, pattern="^(trend|anomaly|recommendation|prediction)$")
     title: Optional[str] = Field(None, min_length=1, max_length=200)
     description: Optional[str] = None
     confidence_score: Optional[float] = Field(None, ge=0, le=1)
-    impact_level: Optional[str] = Field(None, regex="^(low|medium|high|critical)$")
-    category: Optional[str] = Field(None, regex="^(clinical|financial|operational|quality)$")
+    impact_level: Optional[str] = Field(None, pattern="^(low|medium|high|critical)$")
+    category: Optional[str] = Field(None, pattern="^(clinical|financial|operational|quality)$")
     related_metrics: Optional[List[int]] = None
     data_period_start: Optional[datetime] = None
     data_period_end: Optional[datetime] = None
     ai_model_version: Optional[str] = Field(None, max_length=50)
     processing_parameters: Optional[Dict[str, Any]] = None
-    status: Optional[str] = Field(None, regex="^(active|reviewed|dismissed|implemented)$")
+    status: Optional[str] = Field(None, pattern="^(active|reviewed|dismissed|implemented)$")
     reviewed_by: Optional[int] = None
     reviewed_at: Optional[datetime] = None
     action_taken: Optional[str] = None
@@ -369,7 +369,7 @@ class AnalyticsInsight(AnalyticsInsightBase):
 class DataQualityCheckBase(BaseModel):
     check_name: str = Field(..., min_length=1, max_length=200)
     description: Optional[str] = None
-    check_type: str = Field(..., regex="^(completeness|accuracy|consistency|timeliness)$")
+    check_type: str = Field(..., pattern="^(completeness|accuracy|consistency|timeliness)$")
     data_source: str = Field(..., max_length=100)
     validation_rules: Dict[str, Any]
     auto_fix_enabled: bool = False
@@ -380,7 +380,7 @@ class DataQualityCheckCreate(DataQualityCheckBase):
 class DataQualityCheckUpdate(BaseModel):
     check_name: Optional[str] = Field(None, min_length=1, max_length=200)
     description: Optional[str] = None
-    check_type: Optional[str] = Field(None, regex="^(completeness|accuracy|consistency|timeliness)$")
+    check_type: Optional[str] = Field(None, pattern="^(completeness|accuracy|consistency|timeliness)$")
     data_source: Optional[str] = Field(None, max_length=100)
     validation_rules: Optional[Dict[str, Any]] = None
     auto_fix_enabled: Optional[bool] = None
@@ -480,7 +480,7 @@ class BIReportGenerationRequest(BaseModel):
     data_period_start: Optional[datetime] = None
     data_period_end: Optional[datetime] = None
     include_insights: bool = True
-    format: str = Field("pdf", regex="^(pdf|excel|html)$")
+    format: str = Field("pdf", pattern="^(pdf|excel|html)$")
 
 class AnalyticsInsightRequest(BaseModel):
     category: Optional[str] = None

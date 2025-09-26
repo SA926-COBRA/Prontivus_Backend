@@ -150,7 +150,7 @@ class SADTBase(BaseModel):
     diagnostic_hypothesis: str
     requested_date: datetime
     scheduled_date: Optional[datetime] = None
-    priority: str = Field("normal", regex="^(low|normal|high|urgent)$")
+    priority: str = Field("normal", pattern="^(low|normal|high|urgent)$")
     estimated_duration: Optional[int] = Field(None, gt=0)
     health_plan_id: Optional[int] = None
     copayment_required: bool = False
@@ -173,7 +173,7 @@ class SADTUpdate(BaseModel):
     diagnostic_hypothesis: Optional[str] = None
     scheduled_date: Optional[datetime] = None
     status: Optional[SADTStatus] = None
-    priority: Optional[str] = Field(None, regex="^(low|normal|high|urgent)$")
+    priority: Optional[str] = Field(None, pattern="^(low|normal|high|urgent)$")
     estimated_duration: Optional[int] = Field(None, gt=0)
     health_plan_id: Optional[int] = None
     copayment_required: Optional[bool] = None
@@ -208,8 +208,8 @@ class SADTICDCodeBase(BaseModel):
     icd_description: str = Field(..., min_length=1, max_length=500)
     is_primary: bool = False
     severity: Optional[str] = Field(None, max_length=50)
-    laterality: Optional[str] = Field(None, regex="^(Left|Right|Bilateral)$")
-    episode_type: Optional[str] = Field(None, regex="^(Initial|Subsequent|Sequela)$")
+    laterality: Optional[str] = Field(None, pattern="^(Left|Right|Bilateral)$")
+    episode_type: Optional[str] = Field(None, pattern="^(Initial|Subsequent|Sequela)$")
 
 class SADTICDCodeCreate(SADTICDCodeBase):
     pass
@@ -220,8 +220,8 @@ class SADTICDCodeUpdate(BaseModel):
     icd_description: Optional[str] = Field(None, min_length=1, max_length=500)
     is_primary: Optional[bool] = None
     severity: Optional[str] = Field(None, max_length=50)
-    laterality: Optional[str] = Field(None, regex="^(Left|Right|Bilateral)$")
-    episode_type: Optional[str] = Field(None, regex="^(Initial|Subsequent|Sequela)$")
+    laterality: Optional[str] = Field(None, pattern="^(Left|Right|Bilateral)$")
+    episode_type: Optional[str] = Field(None, pattern="^(Initial|Subsequent|Sequela)$")
 
 class SADTICDCode(SADTICDCodeBase):
     id: int
@@ -269,7 +269,7 @@ class MedicalProcedureBase(BaseModel):
     description: str
     procedure_type: SADTType
     specialty: Optional[str] = Field(None, max_length=100)
-    complexity: Optional[str] = Field(None, regex="^(Simple|Medium|Complex)$")
+    complexity: Optional[str] = Field(None, pattern="^(Simple|Medium|Complex)$")
     base_value: Optional[Decimal] = Field(None, ge=0)
     currency: str = Field("BRL", max_length=3)
     anvisa_authorization: bool = False
@@ -290,7 +290,7 @@ class MedicalProcedureUpdate(BaseModel):
     description: Optional[str] = None
     procedure_type: Optional[SADTType] = None
     specialty: Optional[str] = Field(None, max_length=100)
-    complexity: Optional[str] = Field(None, regex="^(Simple|Medium|Complex)$")
+    complexity: Optional[str] = Field(None, pattern="^(Simple|Medium|Complex)$")
     base_value: Optional[Decimal] = Field(None, ge=0)
     currency: Optional[str] = Field(None, max_length=3)
     anvisa_authorization: Optional[bool] = None

@@ -140,7 +140,7 @@ class ReportScheduleBase(BaseModel):
     name: str = Field(..., min_length=1, max_length=200)
     description: Optional[str] = None
     template_id: int
-    schedule_type: str = Field(..., regex="^(daily|weekly|monthly|quarterly|yearly)$")
+    schedule_type: str = Field(..., pattern="^(daily|weekly|monthly|quarterly|yearly)$")
     schedule_config: Optional[Dict[str, Any]] = None
     email_recipients: Optional[List[str]] = None
     notification_enabled: bool = True
@@ -152,7 +152,7 @@ class ReportScheduleCreate(ReportScheduleBase):
 class ReportScheduleUpdate(BaseModel):
     name: Optional[str] = Field(None, min_length=1, max_length=200)
     description: Optional[str] = None
-    schedule_type: Optional[str] = Field(None, regex="^(daily|weekly|monthly|quarterly|yearly)$")
+    schedule_type: Optional[str] = Field(None, pattern="^(daily|weekly|monthly|quarterly|yearly)$")
     schedule_config: Optional[Dict[str, Any]] = None
     email_recipients: Optional[List[str]] = None
     notification_enabled: Optional[bool] = None
@@ -172,7 +172,7 @@ class ReportSchedule(ReportScheduleBase):
 # Report Access Log schemas
 class ReportAccessLogBase(BaseModel):
     report_id: int
-    access_type: str = Field(..., regex="^(view|download|print)$")
+    access_type: str = Field(..., pattern="^(view|download|print)$")
     ip_address: Optional[str] = None
     user_agent: Optional[str] = None
 
