@@ -78,7 +78,7 @@ plotly==5.17.0
 dash==2.14.2
 dash-bootstrap-components==1.5.0
 scipy==1.15.2
-statsmodels==0.14.0
+statsmodels==0.14.5
 
 # Advanced EMR and Medical Standards
 icd10-cm==0.0.5
