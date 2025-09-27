@@ -63,9 +63,7 @@ def get_engine():
                 connect_args=connect_args,
                 # Additional PostgreSQL optimizations
                 isolation_level="AUTOCOMMIT",  # Better for read operations
-                future=True,  # Use SQLAlchemy 2.0 style
-                pool_reset_on_return="commit",  # Reset connections properly
-                pool_dispose_on_return=True  # Dispose connections on return
+                future=True  # Use SQLAlchemy 2.0 style
             )
             print("🌐 Using PostgreSQL database (Online Mode)")
             print(f"   📊 Pool size: {settings.DB_POOL_SIZE}")
