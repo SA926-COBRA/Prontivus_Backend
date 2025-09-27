@@ -410,3 +410,21 @@ async def get_database_info():
     except Exception as e:
         logger.error(f"❌ Failed to get database info: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/create-tables")
+async def create_database_tables():
+    """Create database tables if they don't exist"""
+    try:
+        from app.database.database import create_tables
+        
+        # Create all tables
+        create_tables()
+        
+        return {
+            "status": "success",
+            "message": "Database tables created successfully",
+            "timestamp": datetime.utcnow().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"❌ Failed to create tables: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to create tables: {str(e)}")

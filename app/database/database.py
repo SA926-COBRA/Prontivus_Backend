@@ -86,8 +86,6 @@ def get_db() -> Generator:
     """Dependency to get database session with timeout handling"""
     db = get_session_local()()
     try:
-        # Set a timeout for database operations
-        db.execute(text("SET statement_timeout = '10s'"))
         yield db
     except Exception as e:
         # Log the error and rollback
