@@ -95,6 +95,11 @@ class Settings(BaseSettings):
     TISS_VERSION: str = "3.05.00"
     DEFAULT_TIMEZONE: str = "America/Sao_Paulo"
     
+    # Internationalization
+    DEFAULT_LANGUAGE: str = "pt-BR"
+    SUPPORTED_LANGUAGES: List[str] = ["pt-BR", "en-US", "es-ES"]
+    LANGUAGE_FALLBACK: str = "pt-BR"
+    
     # Licensing
     LICENSE_SIGNATURE_KEY: str = "license-signature-key"
     OFFLINE_GRACE_PERIOD_HOURS: int = 72

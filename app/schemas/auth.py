@@ -19,7 +19,9 @@ class StaffRegister(BaseModel):
     username: str
     full_name: str
     password: str
-    role: Literal["doctor", "secretary", "finance", "admin"]
+    role: Literal["doctor", "secretary", "finance", "admin", "nurse", "technician", "manager"]
+    department: Optional[str] = None  # e.g., "cardiology", "emergency", "administration"
+    position: Optional[str] = None   # e.g., "head_nurse", "senior_technician", "department_manager"
     crm: Optional[str] = None
     specialty: Optional[str] = None
     phone: Optional[str] = None
@@ -43,6 +45,26 @@ class StaffRegister(BaseModel):
     def validate_crm(cls, v, values):
         if values.get('role') == 'doctor' and not v:
             raise ValueError('CRM is required for doctors')
+        return v
+    
+    @validator('role')
+    def validate_role_permissions(cls, v, values):
+        """Validate role and determine authority level based on function"""
+        role_hierarchy = {
+            'admin': {'level': 5, 'permissions': ['*'], 'description': 'Full system access'},
+            'manager': {'level': 4, 'permissions': ['*'], 'description': 'Management level access'},
+            'doctor': {'level': 3, 'permissions': ['medical_care', 'patient_management'], 'description': 'Medical care access'},
+            'nurse': {'level': 2, 'permissions': ['patient_care', 'medication_administration'], 'description': 'Patient care access'},
+            'technician': {'level': 2, 'permissions': ['technical_procedures', 'equipment_management'], 'description': 'Technical procedures access'},
+            'secretary': {'level': 1, 'permissions': ['scheduling', 'patient_registration'], 'description': 'Administrative access'},
+            'finance': {'level': 1, 'permissions': ['billing', 'financial_reports'], 'description': 'Financial access'}
+        }
+        
+        if v not in role_hierarchy:
+            raise ValueError(f'Invalid role: {v}')
+        
+        # Store role hierarchy info for later use
+        values['role_hierarchy'] = role_hierarchy[v]
         return v
 
 class PatientRegister(BaseModel):

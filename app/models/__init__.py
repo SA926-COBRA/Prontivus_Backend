@@ -10,6 +10,7 @@ from .license import License
 from .financial import Billing, BillingItem, BillingPayment, AccountsReceivable, PhysicianPayout, Revenue, Expense, FinancialAlert
 from .secretary import PatientCheckIn, PatientDocument, PatientExam, DailyAgenda, WaitingPanel, InsuranceShortcut
 from .audit import AuditLog
+from .language import Language, TranslationKey, Translation, UserLanguagePreference
 
 __all__ = [
     "Base",
@@ -22,5 +23,6 @@ __all__ = [
     "License",
     "Billing", "BillingItem", "BillingPayment", "AccountsReceivable", "PhysicianPayout", "Revenue", "Expense", "FinancialAlert",
     "PatientCheckIn", "PatientDocument", "PatientExam", "DailyAgenda", "WaitingPanel", "InsuranceShortcut",
-    "AuditLog"
+    "AuditLog",
+    "Language", "TranslationKey", "Translation", "UserLanguagePreference"
 ]

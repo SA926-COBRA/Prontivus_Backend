@@ -3,7 +3,7 @@ API v1 router configuration
 """
 
 from fastapi import APIRouter
-from app.api.v1.endpoints import auth_db_only, patient_auth, appointments, medical_records, prescriptions, notifications, database, documents, patient_calls, financial, patients, secretary_simple, doctors, licenses, units, security, users, user_lookup, secretarial_dashboard, commercial, reports, voice, bi_analytics, advanced_emr, financial_tiss, statistical_reports, integrations, ai_integration
+from app.api.v1.endpoints import auth_db_only, patient_auth, appointments, medical_records, prescriptions, notifications, database, documents, patient_calls, financial, patients, secretary_simple, doctors, licenses, units, security, users, user_lookup, secretarial_dashboard, commercial, reports, voice, bi_analytics, advanced_emr, financial_tiss, statistical_reports, integrations, ai_integration, language
 # Temporarily commented out endpoints with AuthService import issues
 # from app.api.v1.endpoints import licenses, secretary
 
@@ -40,3 +40,4 @@ api_router.include_router(financial_tiss.router, prefix="/financial-tiss", tags=
 api_router.include_router(statistical_reports.router, prefix="/statistical-reports", tags=["statistical-reports"])
 api_router.include_router(integrations.router, prefix="/integrations", tags=["integrations"])
 api_router.include_router(ai_integration.router, prefix="/ai-integration", tags=["ai-integration"])
+api_router.include_router(language.router, prefix="/language", tags=["language"])
