@@ -12,7 +12,6 @@ from app.core.config import settings
 from app.core.security_config import security_settings
 from app.database.database import test_connection
 from app.services.startup_service import startup_service
-from app.middleware.security_middleware import setup_security_middleware
 
 # Configure logging
 logging.basicConfig(
