@@ -126,7 +126,7 @@ class SurgicalEstimate(Base):
     created_by = Column(Integer, ForeignKey("users.id"))
     
     # Relationships
-    patient = relationship("Patient", back_populates="surgical_estimates")
+    patient = relationship("Patient")  # Removed back_populates to avoid circular dependency
     procedure = relationship("SurgicalProcedure", back_populates="estimates")
     doctor = relationship("User", foreign_keys=[doctor_id])
     creator = relationship("User", foreign_keys=[created_by])
@@ -189,7 +189,7 @@ class SurgicalContract(Base):
     
     # Relationships
     estimate = relationship("SurgicalEstimate", back_populates="contracts")
-    patient = relationship("Patient", back_populates="surgical_contracts")
+    patient = relationship("Patient")  # Removed back_populates to avoid circular dependency
     procedure = relationship("SurgicalProcedure", back_populates="contracts")
     doctor = relationship("User", foreign_keys=[doctor_id])
     creator = relationship("User", foreign_keys=[created_by])
