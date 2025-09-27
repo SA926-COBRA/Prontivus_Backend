@@ -16,19 +16,42 @@ from app.core.config import settings
 
 router = APIRouter()
 
-def determine_user_role(email: str) -> str:
-    """Determine user role based on email"""
-    email_lower = email.lower()
-    if "admin" in email_lower:
-        return "admin"
-    elif "doctor" in email_lower:
-        return "doctor"
-    elif "secretary" in email_lower:
-        return "secretary"
-    elif "patient" in email_lower:
-        return "patient"
-    else:
-        return "unknown"
+def determine_user_role(email: str, db: Session) -> str:
+    """Determine user role based on database roles"""
+    try:
+        from sqlalchemy import text
+        
+        # Get user roles from database
+        role_cursor = db.execute(text("""
+            SELECT r.name 
+            FROM users u
+            JOIN user_roles ur ON u.id = ur.user_id
+            JOIN roles r ON ur.role_id = r.id
+            WHERE u.email = :email
+        """), {"email": email})
+        
+        user_roles = [row[0] for row in role_cursor.fetchall()]
+        
+        if not user_roles:
+            # User has no roles - treat as patient
+            return "patient"
+        else:
+            # User has roles - return the first role (primary role)
+            return user_roles[0]
+            
+    except Exception as e:
+        # Fallback to email-based detection if database query fails
+        email_lower = email.lower()
+        if "admin" in email_lower:
+            return "admin"
+        elif "doctor" in email_lower:
+            return "doctor"
+        elif "secretary" in email_lower:
+            return "secretary"
+        elif "patient" in email_lower:
+            return "patient"
+        else:
+            return "unknown"
 
 @router.post("/login", response_model=Token)
 async def patient_login(
@@ -182,7 +205,7 @@ async def get_patient_info(
                 )
             
             # Verify this is a patient
-            user_role = determine_user_role(user_email)
+            user_role = determine_user_role(user_email, db)
             if user_role != "patient":
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
@@ -248,7 +271,7 @@ async def update_patient_profile(
                 )
             
             # Verify this is a patient
-            user_role = determine_user_role(user_email)
+            user_role = determine_user_role(user_email, db)
             if user_role != "patient":
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
@@ -356,7 +379,7 @@ async def refresh_patient_token(
                 )
             
             # Verify this is a patient
-            user_role = determine_user_role(user_email)
+            user_role = determine_user_role(user_email, db)
             if user_role != "patient":
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
