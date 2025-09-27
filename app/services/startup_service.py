@@ -489,6 +489,9 @@ class DatabaseStartupService:
             logger.error(f"❌ Database initialization failed: {e}")
             return False
 
+# Create singleton instance
+startup_service = DatabaseStartupService()
+
 def initialize_database_on_startup() -> bool:
     """Initialize database on application startup"""
     service = DatabaseStartupService()
