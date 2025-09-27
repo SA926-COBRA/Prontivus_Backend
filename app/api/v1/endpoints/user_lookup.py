@@ -57,27 +57,33 @@ async def lookup_user_type(
         if not user:
             return UserLookupResponse(exists=False)
         
-        # Determine user type and role
-        user_type = "patient"  # Default to patient
-        user_role = "patient"  # Default role
+        # Determine user type and role based on actual role assignments
+        # Query user roles from database
+        role_query = """
+            SELECT r.name 
+            FROM user_roles ur
+            JOIN roles r ON ur.role_id = r.id
+            WHERE ur.user_id = :user_id
+        """
         
-        # Check if it's a staff member
-        if user.is_superuser:
-            user_type = "staff"
-            user_role = "admin"
-        elif user.crm:  # Has CRM number = doctor
-            user_type = "staff"
-            user_role = "doctor"
-        elif "secretary" in user.user_email.lower():
-            user_type = "staff"
-            user_role = "secretary"
-        elif "finance" in user.user_email.lower():
-            user_type = "staff"
-            user_role = "finance"
-        elif user.cpf and not user.crm:
-            # Has CPF but no CRM = patient
+        role_cursor = db.execute(text(role_query), {"user_id": user.id})
+        user_roles = [row[0] for row in role_cursor.fetchall()]
+        
+        if not user_roles:
+            # User has no roles - treat as patient
             user_type = "patient"
             user_role = "patient"
+        else:
+            # User has roles - determine type and role
+            primary_role = user_roles[0]  # Use first role as primary
+            
+            if primary_role == "patient":
+                user_type = "patient"
+                user_role = "patient"
+            else:
+                # Any other role (admin, doctor, secretary, etc.) is staff
+                user_type = "staff"
+                user_role = primary_role
         
         return UserLookupResponse(
             exists=True,
