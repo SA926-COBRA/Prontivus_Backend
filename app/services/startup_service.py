@@ -11,7 +11,7 @@ import logging
 
 from app.core.config import settings
 from app.database.database import Base, get_engine, create_tables
-from app.models import user, patient, appointment, medical_record, prescription, tenant, license, financial, secretary, audit, language
+from app.models import user, patient, appointment, medical_record, prescription, tenant, license, financial, secretary, audit
 
 logger = logging.getLogger(__name__)
 
@@ -140,7 +140,7 @@ class DatabaseStartupService:
             logger.info("📊 Creating database tables...")
             
             # Import all models to ensure they're registered
-            from app.models import user, patient, appointment, medical_record, prescription, tenant, license, financial, secretary, audit, language
+            from app.models import user, patient, appointment, medical_record, prescription, tenant, license, financial, secretary, audit
             
             # Create tables with explicit transaction handling
             from app.database.database import get_engine, Base
@@ -405,16 +405,6 @@ class DatabaseStartupService:
                 prescription = Prescription(**prescription_data)
                 db.add(prescription)
                 logger.info("✅ Created sample prescription")
-                
-                # Initialize language system
-                try:
-                    from app.services.language_service import LanguageService
-                    language_service = LanguageService(db)
-                    language_service.initialize_default_languages()
-                    language_service.initialize_default_translations()
-                    logger.info("✅ Language system initialized")
-                except Exception as e:
-                    logger.warning(f"⚠️ Language system initialization failed: {e}")
                 
                 # Commit all changes
                 db.commit()
