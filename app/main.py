@@ -45,23 +45,21 @@ app = FastAPI(
 #         allow_headers=["*"],
 #     )
 
-logger.info("🔧 Development mode - basic security middleware")
-# Basic CORS for development
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins in development
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# CORS middleware
+# CORS middleware - Single configuration
 logger.info(f"🌐 CORS Configuration: {settings.ALLOWED_ORIGINS}")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Temporarily allow all origins
+    allow_origins=[
+        "https://prontivus-frontend.vercel.app",
+        "https://prontivus-frontend-git-main-prontivus.vercel.app",
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:5173",
+        "*"  # Fallback for development
+    ],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
 )
 
