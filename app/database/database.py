@@ -47,7 +47,6 @@ def get_engine():
             connect_args = {
                 "sslmode": settings.POSTGRES_SSL_MODE,
                 "connect_timeout": 5,  # Reduced connection timeout
-                "command_timeout": 10,  # Add command timeout
                 "application_name": "prontivus_backend",
                 "options": "-c statement_timeout=10000"  # 10 second statement timeout
             }
