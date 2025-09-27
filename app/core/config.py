@@ -45,11 +45,11 @@ class Settings(BaseSettings):
     POSTGRES_PASSWORD: str = "prontivus_password"
     POSTGRES_SSL_MODE: str = "prefer"  # prefer, require, disable
     
-    # Connection Pool Settings
-    DB_POOL_SIZE: int = 20
-    DB_MAX_OVERFLOW: int = 30
-    DB_POOL_TIMEOUT: int = 30
-    DB_POOL_RECYCLE: int = 3600
+    # Connection Pool Settings - Optimized for Render
+    DB_POOL_SIZE: int = 5  # Reduced for Render's limitations
+    DB_MAX_OVERFLOW: int = 10  # Reduced overflow
+    DB_POOL_TIMEOUT: int = 10  # Reduced timeout
+    DB_POOL_RECYCLE: int = 1800  # 30 minutes instead of 1 hour
     DB_POOL_PRE_PING: bool = True
     
     # Sync Configuration

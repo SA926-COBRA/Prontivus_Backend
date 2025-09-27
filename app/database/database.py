@@ -2,7 +2,7 @@
 Database connection and session management
 """
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
@@ -43,11 +43,13 @@ def get_engine():
             # Use PostgreSQL for online production with optimized settings
             DATABASE_URL = settings.constructed_database_url
             
-            # Build connection arguments for production
+            # Build connection arguments for production with timeout handling
             connect_args = {
                 "sslmode": settings.POSTGRES_SSL_MODE,
-                "connect_timeout": 10,
-                "application_name": "clinicore_backend"
+                "connect_timeout": 5,  # Reduced connection timeout
+                "command_timeout": 10,  # Add command timeout
+                "application_name": "prontivus_backend",
+                "options": "-c statement_timeout=10000"  # 10 second statement timeout
             }
             
             engine = create_engine(
@@ -62,7 +64,8 @@ def get_engine():
                 # Additional PostgreSQL optimizations
                 isolation_level="AUTOCOMMIT",  # Better for read operations
                 future=True,  # Use SQLAlchemy 2.0 style
-                pool_reset_on_return="commit"  # Reset connections properly
+                pool_reset_on_return="commit",  # Reset connections properly
+                pool_dispose_on_return=True  # Dispose connections on return
             )
             print("🌐 Using PostgreSQL database (Online Mode)")
             print(f"   📊 Pool size: {settings.DB_POOL_SIZE}")
@@ -83,12 +86,23 @@ def get_session_local():
     return SessionLocal
 
 def get_db() -> Generator:
-    """Dependency to get database session"""
+    """Dependency to get database session with timeout handling"""
     db = get_session_local()()
     try:
+        # Set a timeout for database operations
+        db.execute(text("SET statement_timeout = '10s'"))
         yield db
+    except Exception as e:
+        # Log the error and rollback
+        print(f"❌ Database error: {e}")
+        db.rollback()
+        raise
     finally:
-        db.close()
+        # Ensure proper cleanup
+        try:
+            db.close()
+        except Exception as e:
+            print(f"❌ Error closing database session: {e}")
 
 def create_tables():
     """Create all tables in the database"""

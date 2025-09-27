@@ -31,6 +31,8 @@ class AIProcessingStatus(str, Enum):
 
 # AI Configuration schemas
 class AIConfigurationBase(BaseModel):
+    model_config = {"protected_namespaces": ()}
+    
     configuration_name: str = Field(..., min_length=1, max_length=200)
     provider: AIProvider
     api_endpoint: Optional[str] = Field(None, max_length=500)
@@ -54,6 +56,8 @@ class AIConfigurationCreate(AIConfigurationBase):
     pass
 
 class AIConfigurationUpdate(BaseModel):
+    model_config = {"protected_namespaces": ()}
+    
     configuration_name: Optional[str] = Field(None, min_length=1, max_length=200)
     provider: Optional[AIProvider] = None
     api_endpoint: Optional[str] = Field(None, max_length=500)
@@ -92,6 +96,8 @@ class AIConfiguration(AIConfigurationBase):
 
 # AI Processing Job schemas
 class AIProcessingJobBase(BaseModel):
+    model_config = {"protected_namespaces": ()}
+    
     configuration_id: int
     task_type: AITaskType
     input_data: Dict[str, Any]
@@ -105,6 +111,8 @@ class AIProcessingJobCreate(AIProcessingJobBase):
     pass
 
 class AIProcessingJobUpdate(BaseModel):
+    model_config = {"protected_namespaces": ()}
+    
     status: Optional[AIProcessingStatus] = None
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
@@ -294,6 +302,8 @@ class ClinicalNotes(ClinicalNotesBase):
 
 # AI Usage Log schemas
 class AIUsageLogBase(BaseModel):
+    model_config = {"protected_namespaces": ()}
+    
     configuration_id: int
     processing_job_id: Optional[int] = None
     user_id: Optional[int] = None
@@ -320,6 +330,8 @@ class AIUsageLog(AIUsageLogBase):
 
 # AI Model schemas
 class AIModelBase(BaseModel):
+    model_config = {"protected_namespaces": ()}
+    
     model_name: str = Field(..., min_length=1, max_length=100)
     model_version: Optional[str] = Field(None, max_length=50)
     provider: AIProvider
@@ -335,6 +347,8 @@ class AIModelCreate(AIModelBase):
     pass
 
 class AIModelUpdate(BaseModel):
+    model_config = {"protected_namespaces": ()}
+    
     model_name: Optional[str] = Field(None, min_length=1, max_length=100)
     model_version: Optional[str] = Field(None, max_length=50)
     provider: Optional[AIProvider] = None
@@ -364,6 +378,8 @@ class AIModel(AIModelBase):
 
 # AI Feedback schemas
 class AIFeedbackBase(BaseModel):
+    model_config = {"protected_namespaces": ()}
+    
     processing_job_id: int
     user_id: int
     feedback_type: str = Field(..., min_length=1, max_length=50)
@@ -379,6 +395,8 @@ class AIFeedbackCreate(AIFeedbackBase):
     pass
 
 class AIFeedbackUpdate(BaseModel):
+    model_config = {"protected_namespaces": ()}
+    
     feedback_type: Optional[str] = Field(None, min_length=1, max_length=50)
     rating: Optional[int] = Field(None, ge=1, le=5)
     feedback_text: Optional[str] = None
@@ -398,6 +416,8 @@ class AIFeedback(AIFeedbackBase):
 
 # Request/Response schemas
 class AIProcessingRequest(BaseModel):
+    model_config = {"protected_namespaces": ()}
+    
     configuration_id: int
     input_data: Dict[str, Any]
     input_text: Optional[str] = None
@@ -429,6 +449,8 @@ class ClinicalNotesRequest(BaseModel):
     patient_interview: Optional[Dict[str, Any]] = None
 
 class AIUsageSearchRequest(BaseModel):
+    model_config = {"protected_namespaces": ()}
+    
     configuration_id: Optional[int] = None
     user_id: Optional[int] = None
     task_type: Optional[AITaskType] = None
@@ -438,6 +460,8 @@ class AIUsageSearchRequest(BaseModel):
     limit: int = Field(100, ge=1, le=1000)
 
 class AISummary(BaseModel):
+    model_config = {"protected_namespaces": ()}
+    
     total_configurations: int
     active_configurations: int
     total_processing_jobs: int
@@ -449,6 +473,8 @@ class AISummary(BaseModel):
     success_rate: float
 
 class AIAnalytics(BaseModel):
+    model_config = {"protected_namespaces": ()}
+    
     total_configurations: int
     active_configurations: int
     configurations_by_provider: Dict[str, int]
