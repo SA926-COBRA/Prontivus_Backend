@@ -4,7 +4,7 @@ from sqlalchemy.sql import func
 from datetime import datetime
 import enum
 
-from app.database.database import Base
+from app.models.base import Base
 
 class ProcedureType(enum.Enum):
     SURGICAL = "surgical"

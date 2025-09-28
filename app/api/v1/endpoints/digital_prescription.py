@@ -18,7 +18,7 @@ from app.schemas.digital_prescription import (
     PrescriptionVerificationRequest, PrescriptionVerificationResponse,
     PrescriptionDashboardResponse, PrescriptionsResponse
 )
-from app.core.auth import get_current_user
+from app.services.auth_service import AuthService
 
 router = APIRouter()
 

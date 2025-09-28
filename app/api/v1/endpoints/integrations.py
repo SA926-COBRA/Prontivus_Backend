@@ -7,7 +7,7 @@ import json
 
 from app.database.database import get_db
 from app.models.integrations import (
-    HealthPlanIntegration, TelemedicineIntegration, TelemedicineSession,
+    HealthPlanIntegration, TelemedicineIntegration,
     IntegrationSyncLog, HealthPlanAuthorization, IntegrationWebhook,
     WebhookLog, IntegrationHealthCheck
 )
@@ -15,15 +15,14 @@ from app.models.user import User
 from app.schemas.integrations import (
     HealthPlanIntegrationCreate, HealthPlanIntegrationUpdate, HealthPlanIntegration as HealthPlanIntegrationSchema,
     TelemedicineIntegrationCreate, TelemedicineIntegrationUpdate, TelemedicineIntegration as TelemedicineIntegrationSchema,
-    TelemedicineSessionCreate, TelemedicineSessionUpdate, TelemedicineSession as TelemedicineSessionSchema,
     IntegrationSyncLog as IntegrationSyncLogSchema,
     HealthPlanAuthorizationCreate, HealthPlanAuthorizationUpdate, HealthPlanAuthorization as HealthPlanAuthorizationSchema,
     IntegrationWebhook as IntegrationWebhookSchema,
     WebhookLog as WebhookLogSchema,
     IntegrationHealthCheck as IntegrationHealthCheckSchema,
-    IntegrationSearchRequest, TelemedicineSessionSearchRequest,
+    IntegrationSearchRequest,
     AuthorizationSearchRequest, IntegrationSyncRequest,
-    TelemedicineSessionRequest, AuthorizationRequest,
+    AuthorizationRequest,
     IntegrationSummary, IntegrationAnalytics
 )
 from app.services.auth_service import AuthService
@@ -268,132 +267,6 @@ async def test_telemedicine_integration(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to test telemedicine integration: {str(e)}"
-        )
-
-# Telemedicine Session endpoints
-@router.get("/telemedicine/sessions", response_model=List[TelemedicineSessionSchema], summary="Get telemedicine sessions")
-async def get_telemedicine_sessions(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-    skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=1000),
-    integration_id: Optional[int] = Query(None),
-    patient_id: Optional[int] = Query(None),
-    doctor_id: Optional[int] = Query(None),
-    status: Optional[str] = Query(None),
-    date_from: Optional[datetime] = Query(None),
-    date_to: Optional[datetime] = Query(None)
-):
-    """Get telemedicine sessions with filtering options"""
-    try:
-        service = IntegrationsService(db)
-        request = TelemedicineSessionSearchRequest(
-            integration_id=integration_id,
-            patient_id=patient_id,
-            doctor_id=doctor_id,
-            status=status,
-            date_from=date_from,
-            date_to=date_to,
-            skip=skip,
-            limit=limit
-        )
-        sessions = service.search_telemedicine_sessions(request)
-        return sessions
-    except Exception as e:
-        logger.error(f"Error getting telemedicine sessions: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get telemedicine sessions: {str(e)}"
-        )
-
-@router.get("/telemedicine/sessions/{session_id}", response_model=TelemedicineSessionSchema, summary="Get telemedicine session by ID")
-async def get_telemedicine_session(
-    session_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    """Get a specific telemedicine session by ID"""
-    session = db.query(TelemedicineSession).filter(TelemedicineSession.id == session_id).first()
-    if not session:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Telemedicine session not found")
-    return session
-
-@router.post("/telemedicine/sessions", response_model=TelemedicineSessionSchema, status_code=status.HTTP_201_CREATED, summary="Create telemedicine session")
-async def create_telemedicine_session(
-    session_data: TelemedicineSessionRequest,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    """Create a new telemedicine session"""
-    try:
-        service = IntegrationsService(db)
-        session = service.create_telemedicine_session(session_data, current_user.id)
-        return session
-    except Exception as e:
-        logger.error(f"Error creating telemedicine session: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to create telemedicine session: {str(e)}"
-        )
-
-@router.put("/telemedicine/sessions/{session_id}", response_model=TelemedicineSessionSchema, summary="Update telemedicine session")
-async def update_telemedicine_session(
-    session_id: int,
-    session_data: TelemedicineSessionUpdate,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    """Update a telemedicine session"""
-    session = db.query(TelemedicineSession).filter(TelemedicineSession.id == session_id).first()
-    if not session:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Telemedicine session not found")
-    
-    update_data = session_data.dict(exclude_unset=True)
-    for field, value in update_data.items():
-        setattr(session, field, value)
-    
-    db.commit()
-    db.refresh(session)
-    return session
-
-@router.post("/telemedicine/sessions/{session_id}/start", response_model=TelemedicineSessionSchema, summary="Start telemedicine session")
-async def start_telemedicine_session(
-    session_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    """Start a telemedicine session"""
-    try:
-        service = IntegrationsService(db)
-        session = service.start_telemedicine_session(session_id)
-        return session
-    except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-    except Exception as e:
-        logger.error(f"Error starting telemedicine session: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to start telemedicine session: {str(e)}"
-        )
-
-@router.post("/telemedicine/sessions/{session_id}/end", response_model=TelemedicineSessionSchema, summary="End telemedicine session")
-async def end_telemedicine_session(
-    session_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    """End a telemedicine session"""
-    try:
-        service = IntegrationsService(db)
-        session = service.end_telemedicine_session(session_id)
-        return session
-    except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-    except Exception as e:
-        logger.error(f"Error ending telemedicine session: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to end telemedicine session: {str(e)}"
         )
 
 # Health Plan Authorization endpoints

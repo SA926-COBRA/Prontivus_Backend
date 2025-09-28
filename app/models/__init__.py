@@ -9,6 +9,9 @@ from .prescription import Prescription
 from .license import License
 from .financial import Billing, BillingItem, BillingPayment, AccountsReceivable, PhysicianPayout, Revenue, Expense, FinancialAlert
 from .secretary import PatientCheckIn, PatientDocument, PatientExam, DailyAgenda, WaitingPanel, InsuranceShortcut
+from .tiss import TISSInsuranceOperator, TISSCredentials, TISSDoctorCode, TISSTransaction, TISSConfiguration
+from .telemedicine import TelemedicineSession, TelemedicineMessage, TelemedicineFile, TelemedicineConsent, TelemedicineConfiguration, TelemedicineAnalytics
+from .ai_integration import AIAnalysisSession, AIAnalysis, AIConfiguration, AIUsageAnalytics, AIPromptTemplate
 from .digital_prescription import DigitalPrescription, PrescriptionMedication, PrescriptionVerification, PrescriptionConfiguration, PrescriptionTemplate, PrescriptionAnalytics
 
 __all__ = [

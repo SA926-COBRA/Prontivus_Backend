@@ -4,7 +4,7 @@ from sqlalchemy.sql import func
 from datetime import datetime, date
 import enum
 
-from app.database.database import Base
+from app.models.base import Base
 
 class PrescriptionControlLevel(enum.Enum):
     A1 = "A1"  # Controlled substances - highest level

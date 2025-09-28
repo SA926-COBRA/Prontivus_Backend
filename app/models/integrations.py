@@ -4,7 +4,7 @@ from sqlalchemy.sql import func
 from datetime import datetime, date
 import enum
 
-from app.database.database import Base
+from app.models.base import Base
 
 class IntegrationType(enum.Enum):
     HEALTH_PLAN = "health_plan"
@@ -131,57 +131,7 @@ class TelemedicineIntegration(Base):
     
     # Relationships
     creator = relationship("User", foreign_keys=[created_by])
-    sessions = relationship("TelemedicineSession", back_populates="integration")
     sync_logs = relationship("IntegrationSyncLog", back_populates="telemedicine_integration")
-
-class TelemedicineSession(Base):
-    """Telemedicine consultation sessions"""
-    __tablename__ = "telemedicine_sessions"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    session_id = Column(String(100), unique=True, nullable=False)
-    
-    # Session Information
-    integration_id = Column(Integer, ForeignKey("telemedicine_integrations.id"), nullable=False)
-    appointment_id = Column(Integer, ForeignKey("appointments.id"), nullable=True)
-    patient_id = Column(Integer, ForeignKey("patients.id"), nullable=False)
-    doctor_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    
-    # Session Details
-    session_title = Column(String(200), nullable=False)
-    session_description = Column(Text, nullable=True)
-    scheduled_start = Column(DateTime(timezone=True), nullable=False)
-    scheduled_end = Column(DateTime(timezone=True), nullable=False)
-    actual_start = Column(DateTime(timezone=True), nullable=True)
-    actual_end = Column(DateTime(timezone=True), nullable=True)
-    
-    # Provider Information
-    provider_session_id = Column(String(200), nullable=True)
-    meeting_url = Column(String(500), nullable=True)
-    meeting_password = Column(String(100), nullable=True)
-    dial_in_numbers = Column(JSON, nullable=True)
-    
-    # Session Status
-    status = Column(String(50), default="scheduled")  # scheduled, started, ended, cancelled
-    participants = Column(JSON, nullable=True)  # List of participants
-    recording_url = Column(String(500), nullable=True)
-    transcript_url = Column(String(500), nullable=True)
-    
-    # Session Data
-    session_data = Column(JSON, nullable=True)  # Additional session data
-    notes = Column(Text, nullable=True)
-    
-    # Metadata
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    created_by = Column(Integer, ForeignKey("users.id"))
-    
-    # Relationships
-    integration = relationship("TelemedicineIntegration", back_populates="sessions")
-    appointment = relationship("Appointment")
-    patient = relationship("Patient")
-    doctor = relationship("User", foreign_keys=[doctor_id])
-    creator = relationship("User", foreign_keys=[created_by])
 
 class IntegrationSyncLog(Base):
     """Integration synchronization logs"""

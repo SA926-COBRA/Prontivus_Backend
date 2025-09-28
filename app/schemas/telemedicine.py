@@ -240,7 +240,7 @@ class TelemedicineConfiguration(TelemedicineConfigurationBase):
 class TelemedicineSessionJoin(BaseModel):
     """Schema for joining a telemedicine session"""
     session_id: str
-    participant_type: str = Field(..., regex="^(doctor|patient)$")
+    participant_type: str = Field(..., pattern="^(doctor|patient)$")
     participant_id: int
 
 

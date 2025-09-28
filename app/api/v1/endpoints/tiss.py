@@ -18,7 +18,7 @@ from app.schemas.tiss import (
     TISSConfiguration, TISSConfigurationCreate, TISSConfigurationUpdate,
     TISSDashboardResponse, TISSOperatorsStatusResponse
 )
-from app.core.auth import get_current_user
+from app.services.auth_service import AuthService
 
 router = APIRouter()
 

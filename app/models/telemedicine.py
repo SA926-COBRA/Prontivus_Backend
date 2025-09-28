@@ -6,7 +6,7 @@ Models for native telemedicine video platform
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, ForeignKey, JSON, Enum
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from app.database.database import Base
+from app.models.base import Base
 import enum
 
 
@@ -80,7 +80,7 @@ class TelemedicineSession(Base):
     technical_issues = Column(JSON, nullable=True)  # Store technical issues encountered
     
     # Metadata
-    metadata = Column(JSON, nullable=True)  # Additional session metadata
+    session_metadata = Column(JSON, nullable=True)  # Additional session metadata
     
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())

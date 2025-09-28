@@ -6,7 +6,7 @@ Models for digital prescription with ICP-Brasil signature
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, ForeignKey, JSON, Enum, Float
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from app.database.database import Base
+from app.models.base import Base
 import enum
 
 

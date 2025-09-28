@@ -6,7 +6,7 @@ Models for managing TISS (Troca de Informação em Saúde Suplementar) integrati
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, ForeignKey, JSON
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from app.database.database import Base
+from app.models.base import Base
 
 
 class TISSInsuranceOperator(Base):

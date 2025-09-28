@@ -22,7 +22,7 @@ from app.schemas.telemedicine import (
     TelemedicineSessionStart, TelemedicineSessionEnd,
     TelemedicineConsentRequest, TelemedicineConsentResponse
 )
-from app.core.auth import get_current_user
+from app.services.auth_service import AuthService
 
 router = APIRouter()
 

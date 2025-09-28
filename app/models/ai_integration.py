@@ -6,7 +6,7 @@ Models for AI-powered medical consultation analysis
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, ForeignKey, JSON, Enum, Float
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from app.database.database import Base
+from app.models.base import Base
 import enum
 
 
@@ -86,7 +86,7 @@ class AIAnalysisSession(Base):
     data_retention_days = Column(Integer, default=30)
     
     # Metadata
-    metadata = Column(JSON, nullable=True)
+    session_metadata = Column(JSON, nullable=True)
     
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())

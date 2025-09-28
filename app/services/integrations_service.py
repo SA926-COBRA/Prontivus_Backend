@@ -15,14 +15,14 @@ import hashlib
 import hmac
 
 from app.models.integrations import (
-    HealthPlanIntegration, TelemedicineIntegration, TelemedicineSession,
+    HealthPlanIntegration, TelemedicineIntegration,
     IntegrationSyncLog, HealthPlanAuthorization, IntegrationWebhook,
     WebhookLog, IntegrationHealthCheck
 )
 from app.schemas.integrations import (
-    IntegrationSearchRequest, TelemedicineSessionSearchRequest,
+    IntegrationSearchRequest,
     AuthorizationSearchRequest, IntegrationSyncRequest,
-    TelemedicineSessionRequest, AuthorizationRequest,
+    AuthorizationRequest,
     IntegrationSummary, IntegrationAnalytics
 )
 
@@ -255,139 +255,6 @@ class IntegrationsService:
             return test_result
         except Exception as e:
             logger.error(f"Error testing telemedicine integration: {e}")
-            raise
-    
-    # Telemedicine Session Management
-    def create_telemedicine_session(self, request: TelemedicineSessionRequest, user_id: int) -> TelemedicineSession:
-        """Create a new telemedicine session"""
-        try:
-            # Generate session ID
-            session_id = self._generate_session_id()
-            
-            # Create session
-            session = TelemedicineSession(
-                session_id=session_id,
-                integration_id=request.integration_id,
-                appointment_id=request.appointment_id,
-                patient_id=request.patient_id,
-                doctor_id=request.doctor_id,
-                session_title=request.session_title,
-                session_description=request.session_description,
-                scheduled_start=request.scheduled_start,
-                scheduled_end=request.scheduled_end,
-                created_by=user_id
-            )
-            
-            self.db.add(session)
-            self.db.commit()
-            self.db.refresh(session)
-            
-            # Create session in telemedicine provider
-            try:
-                provider_session = self._create_provider_session(session)
-                
-                # Update session with provider information
-                session.provider_session_id = provider_session.get('session_id')
-                session.meeting_url = provider_session.get('meeting_url')
-                session.meeting_password = provider_session.get('meeting_password')
-                session.dial_in_numbers = provider_session.get('dial_in_numbers')
-                
-                self.db.commit()
-                self.db.refresh(session)
-                
-            except Exception as e:
-                logger.error(f"Error creating provider session: {e}")
-                session.status = "error"
-                session.session_data = {"error": str(e)}
-                self.db.commit()
-            
-            return session
-        except Exception as e:
-            logger.error(f"Error creating telemedicine session: {e}")
-            raise
-    
-    def search_telemedicine_sessions(self, request: TelemedicineSessionSearchRequest) -> List[TelemedicineSession]:
-        """Search telemedicine sessions with filters"""
-        try:
-            query = self.db.query(TelemedicineSession)
-            
-            if request.integration_id:
-                query = query.filter(TelemedicineSession.integration_id == request.integration_id)
-            
-            if request.patient_id:
-                query = query.filter(TelemedicineSession.patient_id == request.patient_id)
-            
-            if request.doctor_id:
-                query = query.filter(TelemedicineSession.doctor_id == request.doctor_id)
-            
-            if request.status:
-                query = query.filter(TelemedicineSession.status == request.status)
-            
-            if request.date_from:
-                query = query.filter(TelemedicineSession.scheduled_start >= request.date_from)
-            
-            if request.date_to:
-                query = query.filter(TelemedicineSession.scheduled_start <= request.date_to)
-            
-            sessions = query.order_by(desc(TelemedicineSession.scheduled_start)).offset(
-                request.skip
-            ).limit(request.limit).all()
-            
-            return sessions
-        except Exception as e:
-            logger.error(f"Error searching telemedicine sessions: {e}")
-            raise
-    
-    def start_telemedicine_session(self, session_id: int) -> TelemedicineSession:
-        """Start a telemedicine session"""
-        try:
-            session = self.db.query(TelemedicineSession).filter(
-                TelemedicineSession.id == session_id
-            ).first()
-            
-            if not session:
-                raise ValueError("Session not found")
-            
-            # Update session status
-            session.status = "started"
-            session.actual_start = datetime.utcnow()
-            
-            self.db.commit()
-            self.db.refresh(session)
-            
-            return session
-        except Exception as e:
-            logger.error(f"Error starting telemedicine session: {e}")
-            raise
-    
-    def end_telemedicine_session(self, session_id: int) -> TelemedicineSession:
-        """End a telemedicine session"""
-        try:
-            session = self.db.query(TelemedicineSession).filter(
-                TelemedicineSession.id == session_id
-            ).first()
-            
-            if not session:
-                raise ValueError("Session not found")
-            
-            # Update session status
-            session.status = "ended"
-            session.actual_end = datetime.utcnow()
-            
-            # Get recording and transcript URLs if available
-            try:
-                session_info = self._get_provider_session_info(session)
-                session.recording_url = session_info.get('recording_url')
-                session.transcript_url = session_info.get('transcript_url')
-            except Exception as e:
-                logger.error(f"Error getting session info: {e}")
-            
-            self.db.commit()
-            self.db.refresh(session)
-            
-            return session
-        except Exception as e:
-            logger.error(f"Error ending telemedicine session: {e}")
             raise
     
     # Health Plan Authorization Management
@@ -645,11 +512,7 @@ class IntegrationsService:
                 "telemedicine": total_telemedicine
             }
             
-            # Sessions
-            total_sessions = self.db.query(TelemedicineSession).count()
-            active_sessions = self.db.query(TelemedicineSession).filter(
-                TelemedicineSession.status.in_(["scheduled", "started"])
-            ).count()
+            # Sessions (removed - handled by dedicated telemedicine service)
             
             # Authorizations
             total_authorizations = self.db.query(HealthPlanAuthorization).count()
@@ -700,15 +563,8 @@ class IntegrationsService:
                 stat[0].value: stat[1] for stat in telemedicine_providers
             }
             
-            # Session statistics
-            session_stats = self.db.query(
-                TelemedicineSession.status,
-                func.count(TelemedicineSession.id)
-            ).group_by(TelemedicineSession.status).all()
-            
-            session_statistics = {
-                stat[0]: stat[1] for stat in session_stats
-            }
+            # Session statistics (removed - handled by dedicated telemedicine service)
+            session_statistics = {}
             
             # Authorization statistics
             auth_stats = self.db.query(
@@ -817,40 +673,7 @@ class IntegrationsService:
             logger.error(f"Error during health plan sync: {e}")
             raise
     
-    def _create_provider_session(self, session: TelemedicineSession) -> Dict[str, Any]:
-        """Create session in telemedicine provider"""
-        try:
-            # Mock provider session creation
-            # In real implementation, this would create session via provider API
-            
-            return {
-                "session_id": f"provider_{session.session_id}",
-                "meeting_url": f"https://meeting.provider.com/{session.session_id}",
-                "meeting_password": "123456",
-                "dial_in_numbers": [
-                    {"country": "US", "number": "+1-555-123-4567"},
-                    {"country": "BR", "number": "+55-11-9999-8888"}
-                ]
-            }
-        except Exception as e:
-            logger.error(f"Error creating provider session: {e}")
-            raise
-    
-    def _get_provider_session_info(self, session: TelemedicineSession) -> Dict[str, Any]:
-        """Get session information from provider"""
-        try:
-            # Mock provider session info
-            # In real implementation, this would get info via provider API
-            
-            return {
-                "recording_url": f"https://recordings.provider.com/{session.session_id}",
-                "transcript_url": f"https://transcripts.provider.com/{session.session_id}",
-                "duration_minutes": 45,
-                "participants_count": 2
-            }
-        except Exception as e:
-            logger.error(f"Error getting provider session info: {e}")
-            raise
+    # Helper methods for integrations
     
     def _send_authorization_request(self, authorization: HealthPlanAuthorization) -> Dict[str, Any]:
         """Send authorization request to health plan"""
