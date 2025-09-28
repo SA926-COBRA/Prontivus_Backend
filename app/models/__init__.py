@@ -9,7 +9,7 @@ from .prescription import Prescription
 from .license import License
 from .financial import Billing, BillingItem, BillingPayment, AccountsReceivable, PhysicianPayout, Revenue, Expense, FinancialAlert
 from .secretary import PatientCheckIn, PatientDocument, PatientExam, DailyAgenda, WaitingPanel, InsuranceShortcut
-from .audit import AuditLog
+from .digital_prescription import DigitalPrescription, PrescriptionMedication, PrescriptionVerification, PrescriptionConfiguration, PrescriptionTemplate, PrescriptionAnalytics
 
 __all__ = [
     "Base",
@@ -22,5 +22,9 @@ __all__ = [
     "License",
     "Billing", "BillingItem", "BillingPayment", "AccountsReceivable", "PhysicianPayout", "Revenue", "Expense", "FinancialAlert",
     "PatientCheckIn", "PatientDocument", "PatientExam", "DailyAgenda", "WaitingPanel", "InsuranceShortcut",
+    "TISSInsuranceOperator", "TISSCredentials", "TISSDoctorCode", "TISSTransaction", "TISSConfiguration",
+    "TelemedicineSession", "TelemedicineMessage", "TelemedicineFile", "TelemedicineConsent", "TelemedicineConfiguration", "TelemedicineAnalytics",
+    "AIAnalysisSession", "AIAnalysis", "AIConfiguration", "AIUsageAnalytics", "AIPromptTemplate",
+    "DigitalPrescription", "PrescriptionMedication", "PrescriptionVerification", "PrescriptionConfiguration", "PrescriptionTemplate", "PrescriptionAnalytics",
     "AuditLog"
 ]

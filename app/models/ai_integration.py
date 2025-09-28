@@ -1,380 +1,299 @@
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, Text, ForeignKey, Enum, JSON, Float, Date, Numeric
+"""
+AI Integration Models
+Models for AI-powered medical consultation analysis
+"""
+
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, ForeignKey, JSON, Enum, Float
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from datetime import datetime, date
+from app.database.database import Base
 import enum
 
-from app.database.database import Base
 
-class AIProvider(enum.Enum):
+class AIProvider(str, enum.Enum):
+    """AI service providers"""
     OPENAI = "openai"
     ANTHROPIC = "anthropic"
     GOOGLE = "google"
     AZURE = "azure"
     LOCAL = "local"
 
-class AITaskType(enum.Enum):
-    PRE_CONSULTATION_SUMMARY = "pre_consultation_summary"
-    MEDICAL_TRANSCRIPTION = "medical_transcription"
-    CLINICAL_NOTES = "clinical_notes"
-    DIAGNOSIS_SUGGESTION = "diagnosis_suggestion"
-    TREATMENT_RECOMMENDATION = "treatment_recommendation"
-    DRUG_INTERACTION_CHECK = "drug_interaction_check"
-    MEDICAL_QA = "medical_qa"
-    DOCUMENT_ANALYSIS = "document_analysis"
 
-class AIProcessingStatus(enum.Enum):
+class AIAnalysisStatus(str, enum.Enum):
+    """AI analysis status"""
     PENDING = "pending"
     PROCESSING = "processing"
     COMPLETED = "completed"
     FAILED = "failed"
     CANCELLED = "cancelled"
 
-class AIConfiguration(Base):
-    """AI service configuration and settings"""
-    __tablename__ = "ai_configurations"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    configuration_name = Column(String(200), nullable=False)
-    provider = Column(Enum(AIProvider), nullable=False)
-    
-    # Provider Configuration
-    api_endpoint = Column(String(500), nullable=True)
-    api_key = Column(String(500), nullable=True)
-    model_name = Column(String(100), nullable=False)
-    model_version = Column(String(50), nullable=True)
-    
-    # Processing Settings
-    max_tokens = Column(Integer, default=4000)
-    temperature = Column(Float, default=0.7)
-    top_p = Column(Float, default=0.9)
-    frequency_penalty = Column(Float, default=0.0)
-    presence_penalty = Column(Float, default=0.0)
-    
-    # Task-specific Settings
-    task_type = Column(Enum(AITaskType), nullable=False)
-    prompt_template = Column(Text, nullable=False)
-    system_prompt = Column(Text, nullable=True)
-    
-    # Performance Settings
-    timeout_seconds = Column(Integer, default=30)
-    retry_count = Column(Integer, default=3)
-    batch_size = Column(Integer, default=1)
-    
-    # Status and Monitoring
-    is_active = Column(Boolean, default=True)
-    last_used = Column(DateTime(timezone=True), nullable=True)
-    usage_count = Column(Integer, default=0)
-    success_count = Column(Integer, default=0)
-    failure_count = Column(Integer, default=0)
-    average_response_time = Column(Float, nullable=True)
-    
-    # Cost Tracking
-    cost_per_token = Column(Numeric(10, 6), nullable=True)
-    total_cost = Column(Numeric(10, 2), default=0)
-    
-    # Metadata
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    created_by = Column(Integer, ForeignKey("users.id"))
-    
-    # Relationships
-    creator = relationship("User", foreign_keys=[created_by])
-    processing_jobs = relationship("AIProcessingJob", back_populates="configuration")
 
-class AIProcessingJob(Base):
-    """AI processing job tracking and results"""
-    __tablename__ = "ai_processing_jobs"
-    
+class AIAnalysisType(str, enum.Enum):
+    """Types of AI analysis"""
+    TRANSCRIPTION = "transcription"
+    CLINICAL_SUMMARY = "clinical_summary"
+    DIAGNOSIS_SUGGESTION = "diagnosis_suggestion"
+    EXAM_SUGGESTION = "exam_suggestion"
+    TREATMENT_SUGGESTION = "treatment_suggestion"
+    ICD_CODING = "icd_coding"
+    PRESCRIPTION_SUGGESTION = "prescription_suggestion"
+
+
+class AIAnalysisSession(Base):
+    """AI analysis session for medical consultations"""
+    __tablename__ = "ai_analysis_sessions"
+
     id = Column(Integer, primary_key=True, index=True)
-    job_id = Column(String(100), unique=True, nullable=False)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=False, index=True)
     
-    # Job Information
-    configuration_id = Column(Integer, ForeignKey("ai_configurations.id"), nullable=False)
-    task_type = Column(Enum(AITaskType), nullable=False)
+    # Session details
+    session_id = Column(String(100), unique=True, nullable=False, index=True)
+    consultation_id = Column(Integer, ForeignKey("appointments.id"), nullable=True, index=True)
+    telemedicine_session_id = Column(Integer, ForeignKey("telemedicine_sessions.id"), nullable=True, index=True)
     
-    # Input Data
-    input_data = Column(JSON, nullable=False)
-    input_text = Column(Text, nullable=True)
-    input_metadata = Column(JSON, nullable=True)
+    # Participants
+    doctor_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    patient_id = Column(Integer, ForeignKey("patients.id"), nullable=False, index=True)
     
-    # Processing Details
-    status = Column(Enum(AIProcessingStatus), default=AIProcessingStatus.PENDING)
+    # Audio/Video data
+    audio_file_path = Column(String(500), nullable=True)
+    audio_duration_seconds = Column(Integer, nullable=True)
+    audio_file_size_mb = Column(Float, nullable=True)
+    video_file_path = Column(String(500), nullable=True)
+    
+    # AI Configuration
+    ai_provider = Column(Enum(AIProvider), nullable=False)
+    ai_model = Column(String(100), nullable=False)
+    language = Column(String(10), default="pt-BR")
+    
+    # Analysis settings
+    enabled_analyses = Column(JSON, nullable=True)  # List of enabled analysis types
+    custom_prompts = Column(JSON, nullable=True)  # Custom prompts for each analysis type
+    
+    # Status and results
+    status = Column(Enum(AIAnalysisStatus), default=AIAnalysisStatus.PENDING)
     started_at = Column(DateTime(timezone=True), nullable=True)
     completed_at = Column(DateTime(timezone=True), nullable=True)
-    processing_time_seconds = Column(Float, nullable=True)
+    error_message = Column(Text, nullable=True)
+    
+    # Cost tracking
+    tokens_used = Column(Integer, nullable=True)
+    cost_usd = Column(Float, nullable=True)
+    
+    # Consent and privacy
+    patient_consent_given = Column(Boolean, default=False)
+    consent_given_at = Column(DateTime(timezone=True), nullable=True)
+    data_retention_days = Column(Integer, default=30)
+    
+    # Metadata
+    metadata = Column(JSON, nullable=True)
+    
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Relationships
+    tenant = relationship("Tenant")
+    consultation = relationship("Appointment")
+    telemedicine_session = relationship("TelemedicineSession")
+    doctor = relationship("User", foreign_keys=[doctor_id])
+    patient = relationship("Patient")
+    analyses = relationship("AIAnalysis", back_populates="session")
+
+
+class AIAnalysis(Base):
+    """Individual AI analysis results"""
+    __tablename__ = "ai_analyses"
+
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(Integer, ForeignKey("ai_analysis_sessions.id"), nullable=False, index=True)
+    
+    # Analysis details
+    analysis_type = Column(Enum(AIAnalysisType), nullable=False)
+    analysis_version = Column(String(20), default="1.0")
+    
+    # Input data
+    input_text = Column(Text, nullable=True)  # Transcribed text or input prompt
+    input_audio_segment_start = Column(Integer, nullable=True)  # Start time in seconds
+    input_audio_segment_end = Column(Integer, nullable=True)  # End time in seconds
+    
+    # AI processing
+    ai_provider = Column(Enum(AIProvider), nullable=False)
+    ai_model = Column(String(100), nullable=False)
+    prompt_used = Column(Text, nullable=True)
     
     # Results
-    output_data = Column(JSON, nullable=True)
-    output_text = Column(Text, nullable=True)
-    confidence_score = Column(Float, nullable=True)
-    error_message = Column(Text, nullable=True)
-    
-    # Usage Tracking
-    tokens_used = Column(Integer, nullable=True)
-    cost = Column(Numeric(10, 4), nullable=True)
-    
-    # Related Information
-    patient_id = Column(Integer, ForeignKey("patients.id"), nullable=True)
-    doctor_id = Column(Integer, ForeignKey("users.id"), nullable=True)
-    appointment_id = Column(Integer, ForeignKey("appointments.id"), nullable=True)
-    
-    # Metadata
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    created_by = Column(Integer, ForeignKey("users.id"))
-    
-    # Relationships
-    configuration = relationship("AIConfiguration", back_populates="processing_jobs")
-    patient = relationship("Patient")
-    doctor = relationship("User", foreign_keys=[doctor_id])
-    appointment = relationship("Appointment")
-    creator = relationship("User", foreign_keys=[created_by])
-
-class PreConsultationSummary(Base):
-    """Pre-consultation AI-generated summaries"""
-    __tablename__ = "pre_consultation_summaries"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    summary_id = Column(String(100), unique=True, nullable=False)
-    
-    # Related Information
-    patient_id = Column(Integer, ForeignKey("patients.id"), nullable=False)
-    doctor_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    appointment_id = Column(Integer, ForeignKey("appointments.id"), nullable=True)
-    processing_job_id = Column(Integer, ForeignKey("ai_processing_jobs.id"), nullable=True)
-    
-    # Summary Content
-    chief_complaint = Column(Text, nullable=True)
-    history_of_present_illness = Column(Text, nullable=True)
-    past_medical_history = Column(Text, nullable=True)
-    medications = Column(Text, nullable=True)
-    allergies = Column(Text, nullable=True)
-    social_history = Column(Text, nullable=True)
-    family_history = Column(Text, nullable=True)
-    review_of_systems = Column(Text, nullable=True)
-    
-    # AI Analysis
-    risk_factors = Column(JSON, nullable=True)
-    potential_diagnoses = Column(JSON, nullable=True)
-    recommended_tests = Column(JSON, nullable=True)
-    clinical_notes = Column(Text, nullable=True)
-    confidence_score = Column(Float, nullable=True)
-    
-    # Status and Review
-    status = Column(String(50), default="generated")  # generated, reviewed, approved, rejected
-    reviewed_by = Column(Integer, ForeignKey("users.id"), nullable=True)
-    reviewed_at = Column(DateTime(timezone=True), nullable=True)
-    review_notes = Column(Text, nullable=True)
-    is_approved = Column(Boolean, default=False)
-    
-    # Metadata
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    created_by = Column(Integer, ForeignKey("users.id"))
-    
-    # Relationships
-    patient = relationship("Patient")
-    doctor = relationship("User", foreign_keys=[doctor_id])
-    appointment = relationship("Appointment")
-    processing_job = relationship("AIProcessingJob")
-    reviewer = relationship("User", foreign_keys=[reviewed_by])
-    creator = relationship("User", foreign_keys=[created_by])
-
-class MedicalTranscription(Base):
-    """AI-generated medical transcriptions"""
-    __tablename__ = "medical_transcriptions"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    transcription_id = Column(String(100), unique=True, nullable=False)
-    
-    # Related Information
-    patient_id = Column(Integer, ForeignKey("patients.id"), nullable=False)
-    doctor_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    appointment_id = Column(Integer, ForeignKey("appointments.id"), nullable=True)
-    processing_job_id = Column(Integer, ForeignKey("ai_processing_jobs.id"), nullable=True)
-    
-    # Audio Information
-    audio_file_path = Column(String(500), nullable=True)
-    audio_duration_seconds = Column(Float, nullable=True)
-    audio_quality = Column(String(50), nullable=True)
-    
-    # Transcription Content
-    raw_transcription = Column(Text, nullable=True)
-    cleaned_transcription = Column(Text, nullable=True)
-    structured_transcription = Column(JSON, nullable=True)
-    
-    # AI Analysis
-    speaker_identification = Column(JSON, nullable=True)
-    medical_terms = Column(JSON, nullable=True)
-    key_phrases = Column(JSON, nullable=True)
-    sentiment_analysis = Column(JSON, nullable=True)
-    confidence_score = Column(Float, nullable=True)
-    
-    # Status and Review
-    status = Column(String(50), default="transcribed")  # transcribed, reviewed, approved, rejected
-    reviewed_by = Column(Integer, ForeignKey("users.id"), nullable=True)
-    reviewed_at = Column(DateTime(timezone=True), nullable=True)
-    review_notes = Column(Text, nullable=True)
-    is_approved = Column(Boolean, default=False)
-    
-    # Metadata
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    created_by = Column(Integer, ForeignKey("users.id"))
-    
-    # Relationships
-    patient = relationship("Patient")
-    doctor = relationship("User", foreign_keys=[doctor_id])
-    appointment = relationship("Appointment")
-    processing_job = relationship("AIProcessingJob")
-    reviewer = relationship("User", foreign_keys=[reviewed_by])
-    creator = relationship("User", foreign_keys=[created_by])
-
-class ClinicalNotes(Base):
-    """AI-generated clinical notes"""
-    __tablename__ = "clinical_notes"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    notes_id = Column(String(100), unique=True, nullable=False)
-    
-    # Related Information
-    patient_id = Column(Integer, ForeignKey("patients.id"), nullable=False)
-    doctor_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    appointment_id = Column(Integer, ForeignKey("appointments.id"), nullable=True)
-    processing_job_id = Column(Integer, ForeignKey("ai_processing_jobs.id"), nullable=True)
-    
-    # Notes Content
-    subjective = Column(Text, nullable=True)
-    objective = Column(Text, nullable=True)
-    assessment = Column(Text, nullable=True)
-    plan = Column(Text, nullable=True)
-    
-    # AI Analysis
-    diagnosis_suggestions = Column(JSON, nullable=True)
-    treatment_recommendations = Column(JSON, nullable=True)
-    follow_up_notes = Column(Text, nullable=True)
-    risk_assessment = Column(JSON, nullable=True)
-    confidence_score = Column(Float, nullable=True)
-    
-    # Status and Review
-    status = Column(String(50), default="generated")  # generated, reviewed, approved, rejected
-    reviewed_by = Column(Integer, ForeignKey("users.id"), nullable=True)
-    reviewed_at = Column(DateTime(timezone=True), nullable=True)
-    review_notes = Column(Text, nullable=True)
-    is_approved = Column(Boolean, default=False)
-    
-    # Metadata
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    created_by = Column(Integer, ForeignKey("users.id"))
-    
-    # Relationships
-    patient = relationship("Patient")
-    doctor = relationship("User", foreign_keys=[doctor_id])
-    appointment = relationship("Appointment")
-    processing_job = relationship("AIProcessingJob")
-    reviewer = relationship("User", foreign_keys=[reviewed_by])
-    creator = relationship("User", foreign_keys=[created_by])
-
-class AIUsageLog(Base):
-    """AI usage tracking and analytics"""
-    __tablename__ = "ai_usage_logs"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    
-    # Usage Information
-    configuration_id = Column(Integer, ForeignKey("ai_configurations.id"), nullable=False)
-    processing_job_id = Column(Integer, ForeignKey("ai_processing_jobs.id"), nullable=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
-    
-    # Request Details
-    request_timestamp = Column(DateTime(timezone=True), server_default=func.now())
-    task_type = Column(Enum(AITaskType), nullable=False)
-    input_tokens = Column(Integer, nullable=True)
-    output_tokens = Column(Integer, nullable=True)
-    total_tokens = Column(Integer, nullable=True)
-    
-    # Response Details
-    response_time_ms = Column(Integer, nullable=True)
-    success = Column(Boolean, default=True)
-    error_message = Column(Text, nullable=True)
-    
-    # Cost Information
-    cost = Column(Numeric(10, 4), nullable=True)
-    cost_per_token = Column(Numeric(10, 6), nullable=True)
-    
-    # Additional Data
-    usage_metadata = Column(JSON, nullable=True)
-    
-    # Relationships
-    configuration = relationship("AIConfiguration")
-    processing_job = relationship("AIProcessingJob")
-    user = relationship("User")
-
-class AIModel(Base):
-    """AI model information and performance tracking"""
-    __tablename__ = "ai_models"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    model_name = Column(String(100), nullable=False)
-    model_version = Column(String(50), nullable=True)
-    provider = Column(Enum(AIProvider), nullable=False)
-    
-    # Model Information
-    model_type = Column(String(50), nullable=False)  # gpt, claude, gemini, etc.
-    model_size = Column(String(50), nullable=True)  # small, medium, large, xl
-    capabilities = Column(JSON, nullable=True)  # List of supported tasks
-    
-    # Performance Metrics
-    accuracy_score = Column(Float, nullable=True)
-    response_time_ms = Column(Integer, nullable=True)
-    cost_per_token = Column(Numeric(10, 6), nullable=True)
-    max_tokens = Column(Integer, nullable=True)
-    
-    # Usage Statistics
-    total_requests = Column(Integer, default=0)
-    successful_requests = Column(Integer, default=0)
-    failed_requests = Column(Integer, default=0)
-    average_response_time = Column(Float, nullable=True)
+    raw_result = Column(Text, nullable=True)  # Raw AI response
+    processed_result = Column(JSON, nullable=True)  # Structured result
+    confidence_score = Column(Float, nullable=True)  # AI confidence (0-1)
     
     # Status
-    is_active = Column(Boolean, default=True)
-    is_deprecated = Column(Boolean, default=False)
+    status = Column(Enum(AIAnalysisStatus), default=AIAnalysisStatus.PENDING)
+    processing_time_seconds = Column(Integer, nullable=True)
+    error_message = Column(Text, nullable=True)
     
-    # Metadata
+    # Cost tracking
+    tokens_used = Column(Integer, nullable=True)
+    cost_usd = Column(Float, nullable=True)
+    
+    # Doctor review
+    doctor_reviewed = Column(Boolean, default=False)
+    doctor_approved = Column(Boolean, nullable=True)
+    doctor_notes = Column(Text, nullable=True)
+    doctor_modified_result = Column(JSON, nullable=True)
+    reviewed_at = Column(DateTime(timezone=True), nullable=True)
+    
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    
-    # Relationships
-    configurations = relationship("AIConfiguration")
 
-class AIFeedback(Base):
-    """User feedback on AI-generated content"""
-    __tablename__ = "ai_feedback"
-    
+    # Relationships
+    session = relationship("AIAnalysisSession", back_populates="analyses")
+
+
+class AIConfiguration(Base):
+    """AI service configuration for tenants"""
+    __tablename__ = "ai_configuration"
+
     id = Column(Integer, primary_key=True, index=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=False, unique=True, index=True)
     
-    # Related Information
-    processing_job_id = Column(Integer, ForeignKey("ai_processing_jobs.id"), nullable=False)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    # Service settings
+    is_enabled = Column(Boolean, default=False)
+    default_provider = Column(Enum(AIProvider), default=AIProvider.OPENAI)
+    default_model = Column(String(100), default="gpt-4")
+    default_language = Column(String(10), default="pt-BR")
     
-    # Feedback Details
-    feedback_type = Column(String(50), nullable=False)  # accuracy, relevance, completeness, etc.
-    rating = Column(Integer, nullable=True)  # 1-5 scale
-    feedback_text = Column(Text, nullable=True)
-    suggestions = Column(Text, nullable=True)
+    # API credentials (encrypted)
+    openai_api_key = Column(String(500), nullable=True)  # Encrypted
+    anthropic_api_key = Column(String(500), nullable=True)  # Encrypted
+    google_api_key = Column(String(500), nullable=True)  # Encrypted
+    azure_endpoint = Column(String(500), nullable=True)
+    azure_api_key = Column(String(500), nullable=True)  # Encrypted
     
-    # Content Analysis
-    content_quality = Column(String(50), nullable=True)  # excellent, good, fair, poor
-    accuracy_rating = Column(Integer, nullable=True)  # 1-5 scale
-    relevance_rating = Column(Integer, nullable=True)  # 1-5 scale
-    completeness_rating = Column(Integer, nullable=True)  # 1-5 scale
+    # Analysis settings
+    enabled_analyses = Column(JSON, nullable=True)  # Default enabled analyses
+    transcription_enabled = Column(Boolean, default=True)
+    clinical_summary_enabled = Column(Boolean, default=True)
+    diagnosis_suggestion_enabled = Column(Boolean, default=True)
+    exam_suggestion_enabled = Column(Boolean, default=True)
+    treatment_suggestion_enabled = Column(Boolean, default=True)
+    icd_coding_enabled = Column(Boolean, default=True)
+    prescription_suggestion_enabled = Column(Boolean, default=True)
     
-    # Metadata
+    # Quality settings
+    min_confidence_threshold = Column(Float, default=0.7)
+    max_analysis_duration_minutes = Column(Integer, default=60)
+    auto_approve_low_risk = Column(Boolean, default=False)
+    
+    # Cost management
+    monthly_budget_usd = Column(Float, nullable=True)
+    cost_per_analysis_usd = Column(Float, nullable=True)
+    alert_threshold_percent = Column(Integer, default=80)  # Alert when 80% of budget used
+    
+    # Privacy and compliance
+    data_retention_days = Column(Integer, default=30)
+    auto_delete_enabled = Column(Boolean, default=True)
+    anonymize_data = Column(Boolean, default=True)
+    lgpd_compliant = Column(Boolean, default=True)
+    
+    # Integration settings
+    integrate_with_emr = Column(Boolean, default=True)
+    auto_populate_notes = Column(Boolean, default=False)
+    require_doctor_approval = Column(Boolean, default=True)
+    
+    # Custom prompts
+    custom_prompts = Column(JSON, nullable=True)  # Custom prompts for each analysis type
+    
+    # Notification settings
+    notify_on_completion = Column(Boolean, default=True)
+    notify_on_error = Column(Boolean, default=True)
+    notify_on_budget_alert = Column(Boolean, default=True)
+    
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    
+
     # Relationships
-    processing_job = relationship("AIProcessingJob")
-    user = relationship("User")
+    tenant = relationship("Tenant")
+
+
+class AIUsageAnalytics(Base):
+    """Analytics for AI usage and costs"""
+    __tablename__ = "ai_usage_analytics"
+
+    id = Column(Integer, primary_key=True, index=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=False, index=True)
+    
+    # Time period
+    date = Column(DateTime(timezone=True), nullable=False, index=True)
+    period_type = Column(String(20), default="daily")  # daily, weekly, monthly
+    
+    # Usage metrics
+    total_sessions = Column(Integer, default=0)
+    total_analyses = Column(Integer, default=0)
+    total_audio_minutes = Column(Float, default=0)
+    total_tokens_used = Column(Integer, default=0)
+    
+    # Cost metrics
+    total_cost_usd = Column(Float, default=0)
+    average_cost_per_session = Column(Float, default=0)
+    average_cost_per_analysis = Column(Float, default=0)
+    
+    # Quality metrics
+    average_confidence_score = Column(Float, default=0)
+    doctor_approval_rate = Column(Float, default=0)
+    auto_approval_rate = Column(Float, default=0)
+    
+    # Analysis breakdown
+    transcription_count = Column(Integer, default=0)
+    clinical_summary_count = Column(Integer, default=0)
+    diagnosis_suggestion_count = Column(Integer, default=0)
+    exam_suggestion_count = Column(Integer, default=0)
+    treatment_suggestion_count = Column(Integer, default=0)
+    icd_coding_count = Column(Integer, default=0)
+    prescription_suggestion_count = Column(Integer, default=0)
+    
+    # Provider breakdown
+    openai_usage_count = Column(Integer, default=0)
+    anthropic_usage_count = Column(Integer, default=0)
+    google_usage_count = Column(Integer, default=0)
+    azure_usage_count = Column(Integer, default=0)
+    
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Relationships
+    tenant = relationship("Tenant")
+
+
+class AIPromptTemplate(Base):
+    """Template prompts for AI analysis"""
+    __tablename__ = "ai_prompt_templates"
+
+    id = Column(Integer, primary_key=True, index=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=False, index=True)
+    
+    # Template details
+    name = Column(String(255), nullable=False)
+    analysis_type = Column(Enum(AIAnalysisType), nullable=False)
+    language = Column(String(10), default="pt-BR")
+    version = Column(String(20), default="1.0")
+    
+    # Template content
+    system_prompt = Column(Text, nullable=False)
+    user_prompt_template = Column(Text, nullable=False)
+    output_format = Column(JSON, nullable=True)  # Expected output format
+    
+    # Template settings
+    is_default = Column(Boolean, default=False)
+    is_active = Column(Boolean, default=True)
+    temperature = Column(Float, default=0.7)
+    max_tokens = Column(Integer, default=2000)
+    
+    # Usage tracking
+    usage_count = Column(Integer, default=0)
+    success_rate = Column(Float, default=0)
+    average_confidence = Column(Float, default=0)
+    
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Relationships
+    tenant = relationship("Tenant")

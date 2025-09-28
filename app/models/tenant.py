@@ -114,6 +114,11 @@ class Tenant(Base):
     # billings = relationship("Billing", back_populates="tenant")
     # accounts_receivable = relationship("AccountsReceivable", back_populates="tenant")
     
+    # TISS Integration relationships
+    tiss_credentials = relationship("TISSCredentials", back_populates="tenant")
+    tiss_configuration = relationship("TISSConfiguration", back_populates="tenant")
+    tiss_transactions = relationship("TISSTransaction", back_populates="tenant")
+    
     def __repr__(self):
         return f"<Tenant(id={self.id}, name={self.name}, type={self.type}, status={self.status})>"
 
