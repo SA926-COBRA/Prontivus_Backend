@@ -105,33 +105,21 @@ async def health_check():
         "version": "1.0.0"
     }
 
-# Force server to start regardless of how module is executed
-def start_server():
-    """Start the server - called automatically"""
-    # Get port from environment or default to 8000
-    port = int(os.getenv("PORT", 8000))
-    
-    print(f"🚀 Starting Prontivus Backend on port {port}")
-    print(f"🌐 Host: 0.0.0.0")
-    print(f"📡 Environment: {settings.ENVIRONMENT}")
-    print(f"🔧 Debug mode: {settings.DEBUG}")
-    print(f"🔗 Server will bind to: http://0.0.0.0:{port}")
-    print(f"📊 All services initialized successfully")
-    
-    # Use uvicorn.run for Render compatibility
-    uvicorn.run(
-        app,
-        host="0.0.0.0",
-        port=port,
-        log_level="info",
-        access_log=True,
-        reload=False
-    )
+# Start server immediately for Render deployment
+port = int(os.getenv("PORT", 8000))
+print(f"🚀 Starting Prontivus Backend on port {port}")
+print(f"🌐 Host: 0.0.0.0")
+print(f"📡 Environment: {settings.ENVIRONMENT}")
+print(f"🔧 Debug mode: {settings.DEBUG}")
+print(f"🔗 Server will bind to: http://0.0.0.0:{port}")
+print(f"📊 All services initialized successfully")
 
-# Always start server for Render deployment
-if __name__ == "__main__":
-    start_server()
-else:
-    # For Render - start server immediately when module is imported
-    print("🚀 Render deployment detected - starting server immediately...")
-    start_server()
+# Start server immediately
+uvicorn.run(
+    app,
+    host="0.0.0.0",
+    port=port,
+    log_level="info",
+    access_log=True,
+    reload=False
+)
