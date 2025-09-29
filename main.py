@@ -16,7 +16,7 @@ from app.core.config import settings
 from app.database.database import init_db
 from app.api.v1.api import api_router
 from app.core.exceptions import ProntivusException, prontivus_exception_handler
-from app.services.startup_service import initialize_database_on_startup
+# from app.services.startup_service import initialize_database_on_startup  # Disabled for deployment
 
 # Configure logging - optimized for performance
 logging.basicConfig(
@@ -27,37 +27,12 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Application lifespan events"""
+    """Application lifespan events - simplified for deployment"""
     # Startup
     logger.info("Starting Prontivus Backend...")
     
-    # Automatic database initialization - non-blocking for deployment
-    logger.info("Initializing database automatically...")
-    try:
-        # Run database initialization in background
-        import asyncio
-        import threading
-        
-        def init_db():
-            try:
-                if initialize_database_on_startup():
-                    logger.info("✅ Database initialization completed successfully")
-                else:
-                    logger.error("❌ Database initialization failed - server will continue with limited functionality")
-            except Exception as e:
-                logger.error(f"❌ Database initialization error: {e}")
-        
-        # Start database initialization in background thread
-        db_thread = threading.Thread(target=init_db, daemon=True)
-        db_thread.start()
-        
-        # Give it a moment to start, but don't block the server
-        await asyncio.sleep(1)
-        logger.info("🚀 Server starting while database initializes in background...")
-        
-    except Exception as e:
-        logger.error(f"❌ Database initialization setup failed: {e}")
-        logger.info("🚀 Server starting without database initialization...")
+    # Skip database initialization during startup to prevent blocking
+    logger.info("🚀 Server starting - database will initialize in background...")
     
     yield
     # Shutdown
@@ -138,11 +113,24 @@ if __name__ == "__main__":
     print(f"🌐 Host: 0.0.0.0")
     print(f"📡 Environment: {settings.ENVIRONMENT}")
     print(f"🔧 Debug mode: {settings.DEBUG}")
+    print(f"🔗 Server will bind to: http://0.0.0.0:{port}")
+    print(f"📊 All services initialized successfully")
     
-    uvicorn.run(
-        "main:app",
+    # Explicit server configuration for Render
+    config = uvicorn.Config(
+        app=app,
         host="0.0.0.0",
         port=port,
-        reload=settings.ENVIRONMENT == "development",
-        log_level="info"
+        log_level="info",
+        access_log=True,
+        reload=False  # Disable reload in production
     )
+    
+    try:
+        server = uvicorn.Server(config)
+        print(f"✅ Server configured successfully")
+        print(f"🚀 Starting server on port {port}...")
+        server.run()
+    except Exception as e:
+        print(f"❌ Failed to start server: {e}")
+        raise
