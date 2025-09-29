@@ -14,12 +14,13 @@ from app.database.database import get_db
 from app.services.audio_based_ai_service import AudioBasedAIService
 from app.services.auth_service import AuthService
 from app.schemas.ai_integration import (
-    AIAnalysisSessionCreate, AIAnalysisSessionUpdate, AIAnalysisSessionInDB,
-    AIAnalysisCreate, AIAnalysisUpdate, AIAnalysisInDB,
-    AIConfigurationCreate, AIConfigurationUpdate, AIConfigurationInDB,
-    AIUsageAnalyticsInDB, AIPromptTemplateCreate, AIPromptTemplateUpdate, AIPromptTemplateInDB,
-    AudioRecordingRequest, TranscriptionRequest, AIAnalysisRequest, ClinicalSummaryResponse,
-    DiagnosisSuggestion, ExamSuggestion, TreatmentSuggestion, ICDCodingSuggestion,
+    AIAnalysisSessionCreate, AIAnalysisSessionUpdate, AIAnalysisSession,
+    AIAnalysisCreate, AIAnalysisUpdate, AIAnalysis,
+    AIConfigurationCreate, AIConfigurationUpdate, AIConfiguration,
+    AIUsageAnalytics, AIPromptTemplateCreate, AIPromptTemplateUpdate, AIPromptTemplate,
+    AIAnalysisRequest, AIAnalysisResponse, AIAnalysisResult,
+    AITranscriptionResult, AIClinicalSummaryResult, AIDiagnosisSuggestionResult,
+    AIExamSuggestionResult, AITreatmentSuggestionResult, AIPrescriptionSuggestionResult,
     AIProvider, AIAnalysisStatus, AIAnalysisType
 )
 
@@ -27,7 +28,7 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 # Session Management Endpoints
-@router.post("/sessions", response_model=AIAnalysisSessionInDB)
+@router.post("/sessions", response_model=AIAnalysisSession)
 async def create_analysis_session(
     session_data: AIAnalysisSessionCreate,
     db: Session = Depends(get_db),
@@ -41,7 +42,7 @@ async def create_analysis_session(
         logger.error(f"Error creating AI analysis session: {e}")
         raise HTTPException(status_code=500, detail="Error creating AI analysis session")
 
-@router.get("/sessions", response_model=List[AIAnalysisSessionInDB])
+@router.get("/sessions", response_model=List[AIAnalysisSession])
 async def get_analysis_sessions(
     doctor_id: Optional[int] = None,
     status: Optional[AIAnalysisStatus] = None,
@@ -60,12 +61,12 @@ async def get_analysis_sessions(
             query = query.filter(AIAnalysisSession.status == status)
         
         sessions = query.order_by(AIAnalysisSession.created_at.desc()).offset(skip).limit(limit).all()
-        return [AIAnalysisSessionInDB.from_orm(session) for session in sessions]
+        return [AIAnalysisSession.from_orm(session) for session in sessions]
     except Exception as e:
         logger.error(f"Error getting AI analysis sessions: {e}")
         raise HTTPException(status_code=500, detail="Error getting AI analysis sessions")
 
-@router.get("/sessions/{session_id}", response_model=AIAnalysisSessionInDB)
+@router.get("/sessions/{session_id}", response_model=AIAnalysisSession)
 async def get_analysis_session(
     session_id: str,
     db: Session = Depends(get_db),
@@ -80,7 +81,7 @@ async def get_analysis_session(
         if not session:
             raise HTTPException(status_code=404, detail="AI analysis session not found")
         
-        return AIAnalysisSessionInDB.from_orm(session)
+        return AIAnalysisSession.from_orm(session)
     except HTTPException:
         raise
     except Exception as e:
@@ -420,7 +421,7 @@ async def get_session_analytics(
         raise HTTPException(status_code=500, detail="Error getting session analytics")
 
 # Configuration Endpoints
-@router.get("/configuration", response_model=AIConfigurationInDB)
+@router.get("/configuration", response_model=AIConfiguration)
 async def get_configuration(
     db: Session = Depends(get_db),
     current_user = Depends(AuthService.get_current_user)
@@ -433,7 +434,7 @@ async def get_configuration(
         logger.error(f"Error getting configuration: {e}")
         raise HTTPException(status_code=500, detail="Error getting configuration")
 
-@router.put("/configuration", response_model=AIConfigurationInDB)
+@router.put("/configuration", response_model=AIConfiguration)
 async def update_configuration(
     config_data: AIConfigurationUpdate,
     db: Session = Depends(get_db),

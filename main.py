@@ -31,12 +31,33 @@ async def lifespan(app: FastAPI):
     # Startup
     logger.info("Starting Prontivus Backend...")
     
-    # Automatic database initialization
+    # Automatic database initialization - non-blocking for deployment
     logger.info("Initializing database automatically...")
-    if initialize_database_on_startup():
-        logger.info("✅ Database initialization completed successfully")
-    else:
-        logger.error("❌ Database initialization failed - server will continue with limited functionality")
+    try:
+        # Run database initialization in background
+        import asyncio
+        import threading
+        
+        def init_db():
+            try:
+                if initialize_database_on_startup():
+                    logger.info("✅ Database initialization completed successfully")
+                else:
+                    logger.error("❌ Database initialization failed - server will continue with limited functionality")
+            except Exception as e:
+                logger.error(f"❌ Database initialization error: {e}")
+        
+        # Start database initialization in background thread
+        db_thread = threading.Thread(target=init_db, daemon=True)
+        db_thread.start()
+        
+        # Give it a moment to start, but don't block the server
+        await asyncio.sleep(1)
+        logger.info("🚀 Server starting while database initializes in background...")
+        
+    except Exception as e:
+        logger.error(f"❌ Database initialization setup failed: {e}")
+        logger.info("🚀 Server starting without database initialization...")
     
     yield
     # Shutdown
@@ -90,8 +111,15 @@ async def root():
         "message": "Prontivus API",
         "version": "1.0.0",
         "status": "active",
-        "environment": settings.ENVIRONMENT
+        "environment": settings.ENVIRONMENT,
+        "port": os.getenv("PORT", 8000),
+        "host": "0.0.0.0"
     }
+
+@app.get("/ping")
+async def ping():
+    """Simple ping endpoint for health checks"""
+    return {"status": "pong", "timestamp": "2025-01-15T11:15:00Z"}
 
 @app.get("/health")
 async def health_check():
@@ -106,9 +134,15 @@ if __name__ == "__main__":
     # Get port from environment or default to 8000
     port = int(os.getenv("PORT", 8000))
     
+    print(f"🚀 Starting Prontivus Backend on port {port}")
+    print(f"🌐 Host: 0.0.0.0")
+    print(f"📡 Environment: {settings.ENVIRONMENT}")
+    print(f"🔧 Debug mode: {settings.DEBUG}")
+    
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
         port=port,
-        reload=settings.ENVIRONMENT == "development"
+        reload=settings.ENVIRONMENT == "development",
+        log_level="info"
     )

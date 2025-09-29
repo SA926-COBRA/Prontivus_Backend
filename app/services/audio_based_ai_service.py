@@ -17,21 +17,36 @@ from sqlalchemy import and_, or_, desc, asc
 import httpx
 import openai
 from cryptography.fernet import Fernet
-import whisper
-import torch
-from transformers import pipeline
+
+# Optional imports for AI services
+try:
+    import whisper
+    WHISPER_AVAILABLE = True
+except ImportError:
+    WHISPER_AVAILABLE = False
+    whisper = None
+
+try:
+    import torch
+    from transformers import pipeline
+    TORCH_AVAILABLE = True
+except ImportError:
+    TORCH_AVAILABLE = False
+    torch = None
+    pipeline = None
 
 from app.models.ai_integration import (
     AIAnalysisSession, AIAnalysis, AIConfiguration, AIUsageAnalytics, AIPromptTemplate,
     AIProvider, AIAnalysisStatus, AIAnalysisType
 )
 from app.schemas.ai_integration import (
-    AIAnalysisSessionCreate, AIAnalysisSessionUpdate, AIAnalysisSessionInDB,
-    AIAnalysisCreate, AIAnalysisUpdate, AIAnalysisInDB,
-    AIConfigurationCreate, AIConfigurationUpdate, AIConfigurationInDB,
-    AIUsageAnalyticsInDB, AIPromptTemplateCreate, AIPromptTemplateUpdate, AIPromptTemplateInDB,
-    AudioRecordingRequest, TranscriptionRequest, AIAnalysisRequest, ClinicalSummaryResponse,
-    DiagnosisSuggestion, ExamSuggestion, TreatmentSuggestion, ICDCodingSuggestion
+    AIAnalysisSessionCreate, AIAnalysisSessionUpdate, AIAnalysisSession,
+    AIAnalysisCreate, AIAnalysisUpdate, AIAnalysis,
+    AIConfigurationCreate, AIConfigurationUpdate, AIConfiguration,
+    AIUsageAnalytics, AIPromptTemplateCreate, AIPromptTemplateUpdate, AIPromptTemplate,
+    AIAnalysisRequest, AIAnalysisResponse, AIAnalysisResult,
+    AITranscriptionResult, AIClinicalSummaryResult, AIDiagnosisSuggestionResult,
+    AIExamSuggestionResult, AITreatmentSuggestionResult, AIPrescriptionSuggestionResult
 )
 
 logger = logging.getLogger(__name__)
@@ -90,7 +105,7 @@ class AudioBasedAIService:
             return None
 
     # Audio Recording Management
-    def create_analysis_session(self, session_data: AIAnalysisSessionCreate, user_id: int) -> AIAnalysisSessionInDB:
+    def create_analysis_session(self, session_data: AIAnalysisSessionCreate, user_id: int) -> AIAnalysisSession:
         """Create a new AI analysis session"""
         try:
             session_id = f"ai_session_{uuid.uuid4().hex[:16]}"
@@ -105,7 +120,7 @@ class AudioBasedAIService:
             self.db.commit()
             self.db.refresh(session)
             
-            return AIAnalysisSessionInDB.from_orm(session)
+            return AIAnalysisSession.from_orm(session)
         except Exception as e:
             self.db.rollback()
             logger.error(f"Error creating AI analysis session: {e}")
@@ -748,7 +763,7 @@ class AudioBasedAIService:
             return {"error": str(e)}
 
     # Configuration Management
-    def get_configuration(self) -> AIConfigurationInDB:
+    def get_configuration(self) -> AIConfiguration:
         """Get AI configuration"""
         config = self.db.query(AIConfiguration).first()
         if not config:
@@ -772,9 +787,9 @@ class AudioBasedAIService:
             self.db.commit()
             self.db.refresh(config)
         
-        return AIConfigurationInDB.from_orm(config)
+        return AIConfiguration.from_orm(config)
 
-    def update_configuration(self, config_data: AIConfigurationUpdate) -> AIConfigurationInDB:
+    def update_configuration(self, config_data: AIConfigurationUpdate) -> AIConfiguration:
         """Update AI configuration"""
         config = self.db.query(AIConfiguration).first()
         if not config:
@@ -787,4 +802,4 @@ class AudioBasedAIService:
         
         self.db.commit()
         self.db.refresh(config)
-        return AIConfigurationInDB.from_orm(config)
+        return AIConfiguration.from_orm(config)
