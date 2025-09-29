@@ -116,21 +116,12 @@ if __name__ == "__main__":
     print(f"🔗 Server will bind to: http://0.0.0.0:{port}")
     print(f"📊 All services initialized successfully")
     
-    # Explicit server configuration for Render
-    config = uvicorn.Config(
-        app=app,
+    # Use uvicorn.run for Render compatibility
+    uvicorn.run(
+        app,
         host="0.0.0.0",
         port=port,
         log_level="info",
         access_log=True,
-        reload=False  # Disable reload in production
+        reload=False
     )
-    
-    try:
-        server = uvicorn.Server(config)
-        print(f"✅ Server configured successfully")
-        print(f"🚀 Starting server on port {port}...")
-        server.run()
-    except Exception as e:
-        print(f"❌ Failed to start server: {e}")
-        raise
