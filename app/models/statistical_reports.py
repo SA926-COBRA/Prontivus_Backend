@@ -41,6 +41,7 @@ class StatisticalReport(Base):
     __tablename__ = "statistical_reports"
     
     id = Column(Integer, primary_key=True, index=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=False, index=True)
     report_name = Column(String(200), nullable=False)
     report_type = Column(Enum(ReportType), nullable=False)
     description = Column(Text, nullable=True)
@@ -48,6 +49,45 @@ class StatisticalReport(Base):
     # Report Configuration
     report_format = Column(Enum(ReportFormat), default=ReportFormat.PDF)
     template_id = Column(Integer, ForeignKey("report_templates.id"), nullable=True)
+    frequency = Column(Enum(ReportFrequency), default=ReportFrequency.ONCE)
+    
+    # Data Configuration
+    date_range_start = Column(Date, nullable=True)
+    date_range_end = Column(Date, nullable=True)
+    filters = Column(JSON, nullable=True)  # Custom filters for the report
+    parameters = Column(JSON, nullable=True)  # Report parameters
+    
+    # Report Content
+    data_sources = Column(JSON, nullable=True)  # Which data sources to include
+    metrics = Column(JSON, nullable=True)  # Specific metrics to calculate
+    visualizations = Column(JSON, nullable=True)  # Charts and graphs configuration
+    
+    # Report Status and Metadata
+    status = Column(Enum(ReportStatus), default=ReportStatus.DRAFT)
+    generated_by = Column(Integer, ForeignKey("users.id"), nullable=True)
+    generated_at = Column(DateTime(timezone=True), nullable=True)
+    file_path = Column(String(500), nullable=True)
+    file_size = Column(Integer, nullable=True)
+    
+    # Scheduling
+    is_scheduled = Column(Boolean, default=False)
+    schedule_cron = Column(String(100), nullable=True)  # Cron expression for scheduling
+    next_run = Column(DateTime(timezone=True), nullable=True)
+    last_run = Column(DateTime(timezone=True), nullable=True)
+    
+    # Access Control
+    is_public = Column(Boolean, default=False)
+    access_level = Column(String(50), default="staff")  # staff, admin, public
+    allowed_users = Column(JSON, nullable=True)  # Specific user IDs who can access
+    
+    # Audit
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    # Relationships
+    tenant = relationship("Tenant", back_populates="statistical_reports")
+    template = relationship("ReportTemplate")
+    generator = relationship("User")
     parameters = Column(JSON, nullable=True)  # Report parameters and filters
     
     # Data Configuration

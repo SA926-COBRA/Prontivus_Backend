@@ -13,6 +13,8 @@ from .tiss import TISSInsuranceOperator, TISSCredentials, TISSDoctorCode, TISSTr
 from .telemedicine import TelemedicineSession, TelemedicineMessage, TelemedicineFile, TelemedicineConsent, TelemedicineConfiguration, TelemedicineAnalytics
 from .ai_integration import AIAnalysisSession, AIAnalysis, AIConfiguration, AIUsageAnalytics, AIPromptTemplate
 from .digital_prescription import DigitalPrescription, PrescriptionMedication, PrescriptionVerification, PrescriptionConfiguration, PrescriptionTemplate, PrescriptionAnalytics
+from .advanced_emr import ICD10Code, PatientHistory, Prescription as AdvancedPrescription, PrescriptionMedication as AdvancedPrescriptionMedication, PrescriptionType, SADTRequest, PrescriptionAuditLog
+from .health_plan_integration import HealthPlanProvider, HealthPlanAPIEndpoint, HealthPlanConnectionLog, HealthPlanAuthorization, HealthPlanEligibility, HealthPlanConfiguration
 
 __all__ = [
     "Base",
@@ -29,5 +31,7 @@ __all__ = [
     "TelemedicineSession", "TelemedicineMessage", "TelemedicineFile", "TelemedicineConsent", "TelemedicineConfiguration", "TelemedicineAnalytics",
     "AIAnalysisSession", "AIAnalysis", "AIConfiguration", "AIUsageAnalytics", "AIPromptTemplate",
     "DigitalPrescription", "PrescriptionMedication", "PrescriptionVerification", "PrescriptionConfiguration", "PrescriptionTemplate", "PrescriptionAnalytics",
+    "ICD10Code", "PatientHistory", "AdvancedPrescription", "AdvancedPrescriptionMedication", "PrescriptionType", "SADTRequest", "PrescriptionAuditLog",
+    "HealthPlanProvider", "HealthPlanAPIEndpoint", "HealthPlanConnectionLog", "HealthPlanAuthorization", "HealthPlanEligibility", "HealthPlanConfiguration",
     "AuditLog"
 ]

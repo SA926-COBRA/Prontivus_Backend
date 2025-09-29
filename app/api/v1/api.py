@@ -3,7 +3,7 @@ API v1 router configuration
 """
 
 from fastapi import APIRouter
-from app.api.v1.endpoints import auth_db_only, patient_auth, appointments, medical_records, prescriptions, notifications, database, documents, patient_calls, financial, patients, secretary_simple, doctors, licenses, units, security, users, user_lookup, secretarial_dashboard, commercial, reports, voice, bi_analytics, advanced_emr, financial_tiss, statistical_reports, integrations, ai_integration, tiss, telemedicine, digital_prescription
+from app.api.v1.endpoints import auth_db_only, patient_auth, appointments, medical_records, prescriptions, notifications, database, documents, patient_calls, financial, patients, secretary_simple, doctors, licenses, units, security, users, user_lookup, secretarial_dashboard, commercial, reports, voice, bi_analytics, advanced_emr, financial_tiss, statistical_reports, integrations, ai_integration, tiss, telemedicine, digital_prescription, health_plan_integration, native_telemedicine, enhanced_ai_integration
 # Temporarily commented out endpoints with AuthService import issues
 # from app.api.v1.endpoints import licenses, secretary
 
@@ -35,11 +35,11 @@ api_router.include_router(commercial.router, prefix="/commercial", tags=["commer
 api_router.include_router(reports.router, prefix="/reports", tags=["reports"])
 api_router.include_router(voice.router, prefix="/voice", tags=["voice"])
 api_router.include_router(bi_analytics.router, prefix="/bi-analytics", tags=["bi-analytics"])
-api_router.include_router(advanced_emr.router, prefix="/advanced-emr", tags=["advanced-emr"])
+api_router.include_router(health_plan_integration.router, prefix="/health-plan-integration", tags=["health-plan-integration"])
 api_router.include_router(financial_tiss.router, prefix="/financial-tiss", tags=["financial-tiss"])
 api_router.include_router(statistical_reports.router, prefix="/statistical-reports", tags=["statistical-reports"])
 api_router.include_router(integrations.router, prefix="/integrations", tags=["integrations"])
 api_router.include_router(tiss.router, prefix="/tiss", tags=["tiss-integration"])
-api_router.include_router(telemedicine.router, prefix="/telemedicine", tags=["telemedicine"])
-api_router.include_router(ai_integration.router, prefix="/ai-integration", tags=["ai-integration"])
+api_router.include_router(native_telemedicine.router, prefix="/native-telemedicine", tags=["native-telemedicine"])
+api_router.include_router(enhanced_ai_integration.router, prefix="/ai-integration", tags=["ai-integration"])
 api_router.include_router(digital_prescription.router, prefix="/digital-prescription", tags=["digital-prescription"])

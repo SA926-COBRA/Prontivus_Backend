@@ -1,633 +1,263 @@
-import os
-import json
-import hashlib
-import logging
-from datetime import datetime, timedelta, date
-from typing import Dict, Any, List, Optional, Union
+"""
+Advanced EMR Service Layer - Core Functions
+"""
+
 from sqlalchemy.orm import Session
-from sqlalchemy import text, func, and_, or_, desc
-from decimal import Decimal
+from sqlalchemy import and_, or_, desc, asc
+from typing import List, Optional, Dict, Any
+from datetime import datetime, date
 import uuid
+import json
+import logging
 
 from app.models.advanced_emr import (
-    ControlledPrescription, PrescriptionRefill, SADT, SADTICDCode,
-    ICDCode, MedicalProcedure, HealthPlan, PrescriptionAudit, SADTAudit
+    ICD10Code, PatientHistory, Prescription, PrescriptionMedication,
+    PrescriptionType, SADTRequest, PrescriptionAuditLog
 )
 from app.schemas.advanced_emr import (
-    PrescriptionSearchRequest, SADTSearchRequest, ICDCodeSearchRequest,
-    PrescriptionDispenseRequest, SADTAuthorizationRequest,
-    PrescriptionSummary, SADTSummary, ICDCodeHierarchy
+    ICD10CodeCreate, ICD10CodeUpdate, ICD10CodeInDB,
+    PatientHistoryCreate, PatientHistoryUpdate, PatientHistoryInDB,
+    PrescriptionCreate, PrescriptionUpdate, PrescriptionInDB,
+    PrescriptionMedicationCreate, PrescriptionTypeCreate, PrescriptionTypeInDB,
+    SADTRequestCreate, SADTRequestUpdate, SADTRequestInDB,
+    PrescriptionAuditLogCreate, PrescriptionAuditLogInDB,
+    PatientHistorySearch, PrescriptionSearch, SADTRequestSearch,
+    PrescriptionStatus, SADTServiceType, SADTUrgencyLevel
 )
 
 logger = logging.getLogger(__name__)
 
+
 class AdvancedEMRService:
-    """Service for Advanced Electronic Medical Record management"""
-    
     def __init__(self, db: Session):
         self.db = db
-    
-    # Prescription Management
-    def create_prescription(self, prescription_data: dict, user_id: int) -> ControlledPrescription:
-        """Create a new controlled prescription"""
+
+    # ICD-10 Management
+    def create_icd10_code(self, icd10_data: ICD10CodeCreate) -> ICD10CodeInDB:
+        """Create a new ICD-10 code"""
         try:
-            # Generate prescription number
-            prescription_number = self._generate_prescription_number()
-            
-            # Create prescription
-            prescription = ControlledPrescription(
-                prescription_number=prescription_number,
-                **prescription_data,
-                created_by=user_id
+            icd10_code = ICD10Code(**icd10_data.dict())
+            self.db.add(icd10_code)
+            self.db.commit()
+            self.db.refresh(icd10_code)
+            return ICD10CodeInDB.from_orm(icd10_code)
+        except Exception as e:
+            self.db.rollback()
+            logger.error(f"Error creating ICD-10 code: {e}")
+            raise
+
+    def get_icd10_codes(self, skip: int = 0, limit: int = 100, search: Optional[str] = None) -> List[ICD10CodeInDB]:
+        """Get ICD-10 codes with optional search"""
+        query = self.db.query(ICD10Code).filter(ICD10Code.is_active == True)
+        
+        if search:
+            query = query.filter(
+                or_(
+                    ICD10Code.code.ilike(f"%{search}%"),
+                    ICD10Code.description.ilike(f"%{search}%")
+                )
             )
+        
+        codes = query.offset(skip).limit(limit).all()
+        return [ICD10CodeInDB.from_orm(code) for code in codes]
+
+    def import_icd10_codes_from_csv(self, csv_data: List[Dict[str, Any]]) -> int:
+        """Import ICD-10 codes from CSV data"""
+        imported_count = 0
+        try:
+            for row in csv_data:
+                existing = self.db.query(ICD10Code).filter(ICD10Code.code == row['code']).first()
+                if not existing:
+                    icd10_code = ICD10Code(
+                        code=row['code'],
+                        description=row['description'],
+                        category=row.get('category'),
+                        subcategory=row.get('subcategory'),
+                        is_active=True
+                    )
+                    self.db.add(icd10_code)
+                    imported_count += 1
             
-            # Generate digital signature and hash
-            prescription.digital_signature = self._generate_digital_signature(prescription)
-            prescription.prescription_hash = self._generate_prescription_hash(prescription)
+            self.db.commit()
+            logger.info(f"Imported {imported_count} ICD-10 codes from CSV")
+            return imported_count
+        except Exception as e:
+            self.db.rollback()
+            logger.error(f"Error importing ICD-10 codes: {e}")
+            raise
+
+    # Patient History Management
+    def create_patient_history(self, history_data: PatientHistoryCreate, user_id: int) -> PatientHistoryInDB:
+        """Create a new patient history entry"""
+        try:
+            history_dict = history_data.dict()
+            history_dict['created_by'] = user_id
+            history_dict['updated_by'] = user_id
             
-            # Check regulatory compliance
-            prescription.regulatory_compliance = self._check_regulatory_compliance(prescription)
+            if history_dict.get('vital_signs'):
+                history_dict['vital_signs'] = history_dict['vital_signs'].dict()
             
+            patient_history = PatientHistory(**history_dict)
+            self.db.add(patient_history)
+            self.db.commit()
+            self.db.refresh(patient_history)
+            return PatientHistoryInDB.from_orm(patient_history)
+        except Exception as e:
+            self.db.rollback()
+            logger.error(f"Error creating patient history: {e}")
+            raise
+
+    def get_patient_histories(self, search_params: PatientHistorySearch, skip: int = 0, limit: int = 100) -> List[PatientHistoryInDB]:
+        """Get patient histories with search filters"""
+        query = self.db.query(PatientHistory)
+        
+        if search_params.patient_id:
+            query = query.filter(PatientHistory.patient_id == search_params.patient_id)
+        if search_params.doctor_id:
+            query = query.filter(PatientHistory.doctor_id == search_params.doctor_id)
+        if search_params.date_from:
+            query = query.filter(PatientHistory.visit_date >= search_params.date_from)
+        if search_params.date_to:
+            query = query.filter(PatientHistory.visit_date <= search_params.date_to)
+        if search_params.diagnosis_code:
+            query = query.filter(PatientHistory.primary_diagnosis_code == search_params.diagnosis_code)
+        
+        histories = query.order_by(desc(PatientHistory.visit_date)).offset(skip).limit(limit).all()
+        return [PatientHistoryInDB.from_orm(history) for history in histories]
+
+    # Prescription Management
+    def generate_prescription_number(self) -> str:
+        """Generate unique prescription number"""
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        random_suffix = str(uuid.uuid4())[:8].upper()
+        return f"RX{timestamp}{random_suffix}"
+
+    def create_prescription(self, prescription_data: PrescriptionCreate, user_id: int) -> PrescriptionInDB:
+        """Create a new prescription"""
+        try:
+            prescription_number = self.generate_prescription_number()
+            prescription_dict = prescription_data.dict()
+            prescription_dict['prescription_number'] = prescription_number
+            prescription_dict['status'] = PrescriptionStatus.DRAFT
+            
+            medications_data = prescription_dict.pop('medications', [])
+            prescription = Prescription(**prescription_dict)
             self.db.add(prescription)
+            self.db.flush()
+            
+            for med_data in medications_data:
+                med_data['prescription_id'] = prescription.id
+                medication = PrescriptionMedication(**med_data)
+                self.db.add(medication)
+            
+            audit_log = PrescriptionAuditLog(
+                prescription_id=prescription.id,
+                user_id=user_id,
+                action="created",
+                description="Prescription created"
+            )
+            self.db.add(audit_log)
+            
             self.db.commit()
             self.db.refresh(prescription)
-            
-            # Create audit record
-            self._create_prescription_audit(
-                prescription.id, "created", None, prescription.status, user_id
-            )
-            
-            return prescription
-            
+            return PrescriptionInDB.from_orm(prescription)
         except Exception as e:
+            self.db.rollback()
             logger.error(f"Error creating prescription: {e}")
             raise
-    
-    def update_prescription(self, prescription_id: int, update_data: dict, user_id: int) -> ControlledPrescription:
-        """Update a controlled prescription"""
-        try:
-            prescription = self.db.query(ControlledPrescription).filter(
-                ControlledPrescription.id == prescription_id
-            ).first()
-            
-            if not prescription:
-                raise ValueError("Prescription not found")
-            
-            # Store previous status for audit
-            previous_status = prescription.status
-            
-            # Update fields
-            for field, value in update_data.items():
-                if hasattr(prescription, field):
-                    setattr(prescription, field, value)
-            
-            # Update digital signature and hash
-            prescription.digital_signature = self._generate_digital_signature(prescription)
-            prescription.prescription_hash = self._generate_prescription_hash(prescription)
-            
-            # Update regulatory compliance
-            prescription.regulatory_compliance = self._check_regulatory_compliance(prescription)
-            
-            self.db.commit()
-            self.db.refresh(prescription)
-            
-            # Create audit record
-            self._create_prescription_audit(
-                prescription.id, "updated", previous_status, prescription.status, user_id
-            )
-            
-            return prescription
-            
-        except Exception as e:
-            logger.error(f"Error updating prescription: {e}")
-            raise
-    
-    def dispense_prescription(self, request: PrescriptionDispenseRequest, user_id: int) -> PrescriptionRefill:
-        """Dispense a prescription"""
-        try:
-            prescription = self.db.query(ControlledPrescription).filter(
-                ControlledPrescription.id == request.prescription_id
-            ).first()
-            
-            if not prescription:
-                raise ValueError("Prescription not found")
-            
-            # Check if prescription can be dispensed
-            if prescription.status != "active":
-                raise ValueError("Prescription is not active")
-            
-            if prescription.refills_used >= prescription.refills_allowed:
-                raise ValueError("No refills remaining")
-            
-            # Create refill record
-            refill = PrescriptionRefill(
-                prescription_id=request.prescription_id,
-                refill_number=prescription.refills_used + 1,
-                refill_date=datetime.utcnow(),
-                quantity_dispensed=request.quantity_dispensed,
-                dispensed_by=user_id,
-                pharmacy_name=request.pharmacy_name,
-                pharmacy_address=request.pharmacy_address,
-                patient_identification_verified=request.patient_identification_verified,
-                prescription_verified=request.prescription_verified,
-                regulatory_compliance_checked=request.regulatory_compliance_checked
-            )
-            
-            self.db.add(refill)
-            
-            # Update prescription
-            prescription.refills_used += 1
-            prescription.dispensed = True
-            prescription.dispensed_at = datetime.utcnow()
-            prescription.dispensed_by = user_id
-            
-            # Check if prescription is completed
-            if prescription.refills_used >= prescription.refills_allowed:
-                prescription.status = "completed"
-            
-            self.db.commit()
-            self.db.refresh(refill)
-            
-            # Create audit record
-            self._create_prescription_audit(
-                prescription.id, "dispensed", "active", prescription.status, user_id
-            )
-            
-            return refill
-            
-        except Exception as e:
-            logger.error(f"Error dispensing prescription: {e}")
-            raise
-    
-    def search_prescriptions(self, request: PrescriptionSearchRequest) -> List[ControlledPrescription]:
-        """Search prescriptions with filters"""
-        try:
-            query = self.db.query(ControlledPrescription)
-            
-            if request.patient_id:
-                query = query.filter(ControlledPrescription.patient_id == request.patient_id)
-            
-            if request.doctor_id:
-                query = query.filter(ControlledPrescription.doctor_id == request.doctor_id)
-            
-            if request.control_level:
-                query = query.filter(ControlledPrescription.control_level == request.control_level)
-            
-            if request.status:
-                query = query.filter(ControlledPrescription.status == request.status)
-            
-            if request.medication_name:
-                query = query.filter(
-                    ControlledPrescription.medication_name.ilike(f"%{request.medication_name}%")
-                )
-            
-            if request.date_from:
-                query = query.filter(ControlledPrescription.prescription_date >= request.date_from)
-            
-            if request.date_to:
-                query = query.filter(ControlledPrescription.prescription_date <= request.date_to)
-            
-            prescriptions = query.order_by(desc(ControlledPrescription.prescription_date)).offset(
-                request.skip
-            ).limit(request.limit).all()
-            
-            return prescriptions
-            
-        except Exception as e:
-            logger.error(f"Error searching prescriptions: {e}")
-            raise
-    
-    def get_prescription_summary(self) -> PrescriptionSummary:
-        """Get prescription summary statistics"""
-        try:
-            total_prescriptions = self.db.query(ControlledPrescription).count()
-            active_prescriptions = self.db.query(ControlledPrescription).filter(
-                ControlledPrescription.status == "active"
-            ).count()
-            controlled_prescriptions = self.db.query(ControlledPrescription).filter(
-                ControlledPrescription.controlled_substance == True
-            ).count()
-            expired_prescriptions = self.db.query(ControlledPrescription).filter(
-                ControlledPrescription.status == "expired"
-            ).count()
-            
-            # Prescriptions by control level
-            control_level_stats = self.db.query(
-                ControlledPrescription.control_level,
-                func.count(ControlledPrescription.id)
-            ).group_by(ControlledPrescription.control_level).all()
-            
-            prescriptions_by_control_level = {
-                stat[0].value: stat[1] for stat in control_level_stats
-            }
-            
-            # Prescriptions by status
-            status_stats = self.db.query(
-                ControlledPrescription.status,
-                func.count(ControlledPrescription.id)
-            ).group_by(ControlledPrescription.status).all()
-            
-            prescriptions_by_status = {
-                stat[0].value: stat[1] for stat in status_stats
-            }
-            
-            return PrescriptionSummary(
-                total_prescriptions=total_prescriptions,
-                active_prescriptions=active_prescriptions,
-                controlled_prescriptions=controlled_prescriptions,
-                expired_prescriptions=expired_prescriptions,
-                prescriptions_by_control_level=prescriptions_by_control_level,
-                prescriptions_by_status=prescriptions_by_status
-            )
-            
-        except Exception as e:
-            logger.error(f"Error getting prescription summary: {e}")
-            raise
-    
-    # SADT Management
-    def create_sadt(self, sadt_data: dict, user_id: int) -> SADT:
+
+    def sign_prescription(self, prescription_id: int, certificate_serial: str, signature_hash: str, user_id: int) -> Optional[PrescriptionInDB]:
+        """Digitally sign prescription with ICP-Brasil certificate"""
+        prescription = self.db.query(Prescription).filter(Prescription.id == prescription_id).first()
+        if not prescription:
+            return None
+        
+        prescription.is_digitally_signed = True
+        prescription.certificate_serial = certificate_serial
+        prescription.signature_timestamp = datetime.utcnow()
+        prescription.signature_hash = signature_hash
+        prescription.signature_valid = True
+        prescription.status = PrescriptionStatus.SIGNED
+        
+        qr_data = {
+            "prescription_number": prescription.prescription_number,
+            "signature_hash": signature_hash,
+            "timestamp": prescription.signature_timestamp.isoformat(),
+            "verification_url": f"/verify-prescription/{prescription.prescription_number}"
+        }
+        prescription.qr_code_data = json.dumps(qr_data)
+        prescription.verification_url = qr_data["verification_url"]
+        
+        audit_log = PrescriptionAuditLog(
+            prescription_id=prescription_id,
+            user_id=user_id,
+            action="signed",
+            description=f"Prescription digitally signed with certificate {certificate_serial}"
+        )
+        self.db.add(audit_log)
+        
+        self.db.commit()
+        self.db.refresh(prescription)
+        return PrescriptionInDB.from_orm(prescription)
+
+    def verify_prescription(self, prescription_number: str) -> Dict[str, Any]:
+        """Verify prescription authenticity"""
+        prescription = self.db.query(Prescription).filter(Prescription.prescription_number == prescription_number).first()
+        if not prescription:
+            return {"valid": False, "error": "Prescription not found"}
+        
+        if not prescription.is_digitally_signed:
+            return {"valid": False, "error": "Prescription not digitally signed"}
+        
+        if not prescription.signature_valid:
+            return {"valid": False, "error": "Invalid signature"}
+        
+        return {
+            "valid": True,
+            "prescription": prescription,
+            "signature_timestamp": prescription.signature_timestamp,
+            "certificate_serial": prescription.certificate_serial
+        }
+
+    # SADT Request Management
+    def generate_sadt_request_number(self) -> str:
+        """Generate unique SADT request number"""
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        random_suffix = str(uuid.uuid4())[:6].upper()
+        return f"SADT{timestamp}{random_suffix}"
+
+    def create_sadt_request(self, sadt_data: SADTRequestCreate) -> SADTRequestInDB:
         """Create a new SADT request"""
         try:
-            # Generate SADT number
-            sadt_number = self._generate_sadt_number()
+            request_number = self.generate_sadt_request_number()
+            sadt_dict = sadt_data.dict()
+            sadt_dict['request_number'] = request_number
+            sadt_dict['status'] = "draft"
             
-            # Create SADT
-            sadt = SADT(
-                sadt_number=sadt_number,
-                **sadt_data,
-                created_by=user_id
-            )
-            
-            # Check regulatory compliance
-            sadt.regulatory_compliance = self._check_sadt_compliance(sadt)
-            
-            self.db.add(sadt)
+            sadt_request = SADTRequest(**sadt_dict)
+            self.db.add(sadt_request)
             self.db.commit()
-            self.db.refresh(sadt)
-            
-            # Create audit record
-            self._create_sadt_audit(
-                sadt.id, "created", None, sadt.status, user_id
-            )
-            
-            return sadt
-            
+            self.db.refresh(sadt_request)
+            return SADTRequestInDB.from_orm(sadt_request)
         except Exception as e:
-            logger.error(f"Error creating SADT: {e}")
+            self.db.rollback()
+            logger.error(f"Error creating SADT request: {e}")
             raise
-    
-    def update_sadt(self, sadt_id: int, update_data: dict, user_id: int) -> SADT:
-        """Update a SADT request"""
-        try:
-            sadt = self.db.query(SADT).filter(SADT.id == sadt_id).first()
-            
-            if not sadt:
-                raise ValueError("SADT not found")
-            
-            # Store previous status for audit
-            previous_status = sadt.status
-            
-            # Update fields
-            for field, value in update_data.items():
-                if hasattr(sadt, field):
-                    setattr(sadt, field, value)
-            
-            # Update regulatory compliance
-            sadt.regulatory_compliance = self._check_sadt_compliance(sadt)
-            
-            self.db.commit()
-            self.db.refresh(sadt)
-            
-            # Create audit record
-            self._create_sadt_audit(
-                sadt.id, "updated", previous_status, sadt.status, user_id
-            )
-            
-            return sadt
-            
-        except Exception as e:
-            logger.error(f"Error updating SADT: {e}")
-            raise
-    
-    def authorize_sadt(self, request: SADTAuthorizationRequest) -> SADT:
-        """Authorize a SADT request"""
-        try:
-            sadt = self.db.query(SADT).filter(SADT.id == request.sadt_id).first()
-            
-            if not sadt:
-                raise ValueError("SADT not found")
-            
-            # Store previous status for audit
-            previous_status = sadt.status
-            
-            # Update SADT
-            sadt.status = "authorized"
-            sadt.authorized_date = request.authorized_date
-            sadt.authorized_by = request.authorized_by
-            sadt.authorization_number = request.authorization_number
-            sadt.procedure_results = request.procedure_results
-            sadt.follow_up_required = request.follow_up_required
-            sadt.follow_up_date = request.follow_up_date
-            
-            self.db.commit()
-            self.db.refresh(sadt)
-            
-            # Create audit record
-            self._create_sadt_audit(
-                sadt.id, "authorized", previous_status, sadt.status, request.authorized_by
-            )
-            
-            return sadt
-            
-        except Exception as e:
-            logger.error(f"Error authorizing SADT: {e}")
-            raise
-    
-    def search_sadt(self, request: SADTSearchRequest) -> List[SADT]:
-        """Search SADT requests with filters"""
-        try:
-            query = self.db.query(SADT)
-            
-            if request.patient_id:
-                query = query.filter(SADT.patient_id == request.patient_id)
-            
-            if request.doctor_id:
-                query = query.filter(SADT.doctor_id == request.doctor_id)
-            
-            if request.sadt_type:
-                query = query.filter(SADT.sadt_type == request.sadt_type)
-            
-            if request.status:
-                query = query.filter(SADT.status == request.status)
-            
-            if request.procedure_name:
-                query = query.filter(
-                    SADT.procedure_name.ilike(f"%{request.procedure_name}%")
-                )
-            
-            if request.date_from:
-                query = query.filter(SADT.requested_date >= request.date_from)
-            
-            if request.date_to:
-                query = query.filter(SADT.requested_date <= request.date_to)
-            
-            sadt_requests = query.order_by(desc(SADT.requested_date)).offset(
-                request.skip
-            ).limit(request.limit).all()
-            
-            return sadt_requests
-            
-        except Exception as e:
-            logger.error(f"Error searching SADT: {e}")
-            raise
-    
-    def get_sadt_summary(self) -> SADTSummary:
-        """Get SADT summary statistics"""
-        try:
-            total_sadt = self.db.query(SADT).count()
-            pending_sadt = self.db.query(SADT).filter(SADT.status == "scheduled").count()
-            authorized_sadt = self.db.query(SADT).filter(SADT.status == "authorized").count()
-            completed_sadt = self.db.query(SADT).filter(SADT.status == "completed").count()
-            
-            # SADT by type
-            type_stats = self.db.query(
-                SADT.sadt_type,
-                func.count(SADT.id)
-            ).group_by(SADT.sadt_type).all()
-            
-            sadt_by_type = {
-                stat[0].value: stat[1] for stat in type_stats
-            }
-            
-            # SADT by status
-            status_stats = self.db.query(
-                SADT.status,
-                func.count(SADT.id)
-            ).group_by(SADT.status).all()
-            
-            sadt_by_status = {
-                stat[0].value: stat[1] for stat in status_stats
-            }
-            
-            return SADTSummary(
-                total_sadt=total_sadt,
-                pending_sadt=pending_sadt,
-                authorized_sadt=authorized_sadt,
-                completed_sadt=completed_sadt,
-                sadt_by_type=sadt_by_type,
-                sadt_by_status=sadt_by_status
-            )
-            
-        except Exception as e:
-            logger.error(f"Error getting SADT summary: {e}")
-            raise
-    
-    # ICD Code Management
-    def search_icd_codes(self, request: ICDCodeSearchRequest) -> List[ICDCode]:
-        """Search ICD codes with filters"""
-        try:
-            query = self.db.query(ICDCode)
-            
-            if request.code:
-                query = query.filter(ICDCode.code.ilike(f"%{request.code}%"))
-            
-            if request.description:
-                query = query.filter(ICDCode.description.ilike(f"%{request.description}%"))
-            
-            if request.category:
-                query = query.filter(ICDCode.category == request.category)
-            
-            if request.parent_code:
-                query = query.filter(ICDCode.parent_code == request.parent_code)
-            
-            icd_codes = query.order_by(ICDCode.code).offset(request.skip).limit(request.limit).all()
-            
-            return icd_codes
-            
-        except Exception as e:
-            logger.error(f"Error searching ICD codes: {e}")
-            raise
-    
-    def get_icd_hierarchy(self, parent_code: Optional[str] = None) -> List[ICDCodeHierarchy]:
-        """Get ICD code hierarchy"""
-        try:
-            if parent_code:
-                query = self.db.query(ICDCode).filter(ICDCode.parent_code == parent_code)
-            else:
-                query = self.db.query(ICDCode).filter(ICDCode.parent_code.is_(None))
-            
-            icd_codes = query.order_by(ICDCode.code).all()
-            
-            hierarchy = []
-            for code in icd_codes:
-                children = self.get_icd_hierarchy(code.code)
-                hierarchy.append(ICDCodeHierarchy(
-                    code=code.code,
-                    description=code.description,
-                    category=code.category,
-                    level=code.level,
-                    children=children
-                ))
-            
-            return hierarchy
-            
-        except Exception as e:
-            logger.error(f"Error getting ICD hierarchy: {e}")
-            raise
-    
-    # Utility Methods
-    def _generate_prescription_number(self) -> str:
-        """Generate unique prescription number"""
-        timestamp = datetime.utcnow().strftime("%Y%m%d%H%M%S")
-        random_part = str(uuid.uuid4())[:8].upper()
-        return f"RX{timestamp}{random_part}"
-    
-    def _generate_sadt_number(self) -> str:
-        """Generate unique SADT number"""
-        timestamp = datetime.utcnow().strftime("%Y%m%d%H%M%S")
-        random_part = str(uuid.uuid4())[:8].upper()
-        return f"SADT{timestamp}{random_part}"
-    
-    def _generate_digital_signature(self, prescription: ControlledPrescription) -> str:
-        """Generate digital signature for prescription"""
-        try:
-            # Create signature data
-            signature_data = {
-                "prescription_number": prescription.prescription_number,
-                "patient_id": prescription.patient_id,
-                "doctor_id": prescription.doctor_id,
-                "medication_name": prescription.medication_name,
-                "dosage": prescription.dosage,
-                "prescription_date": prescription.prescription_date.isoformat(),
-                "control_level": prescription.control_level.value
-            }
-            
-            # Generate hash
-            signature_string = json.dumps(signature_data, sort_keys=True)
-            signature_hash = hashlib.sha256(signature_string.encode()).hexdigest()
-            
-            return signature_hash
-            
-        except Exception as e:
-            logger.error(f"Error generating digital signature: {e}")
-            return ""
-    
-    def _generate_prescription_hash(self, prescription: ControlledPrescription) -> str:
-        """Generate prescription hash for integrity verification"""
-        try:
-            # Create hash data
-            hash_data = {
-                "prescription_number": prescription.prescription_number,
-                "medication_name": prescription.medication_name,
-                "dosage": prescription.dosage,
-                "frequency": prescription.frequency,
-                "quantity": prescription.quantity,
-                "prescription_date": prescription.prescription_date.isoformat()
-            }
-            
-            # Generate hash
-            hash_string = json.dumps(hash_data, sort_keys=True)
-            prescription_hash = hashlib.sha256(hash_string.encode()).hexdigest()
-            
-            return prescription_hash
-            
-        except Exception as e:
-            logger.error(f"Error generating prescription hash: {e}")
-            return ""
-    
-    def _check_regulatory_compliance(self, prescription: ControlledPrescription) -> Dict[str, Any]:
-        """Check regulatory compliance for prescription"""
-        try:
-            compliance = {
-                "anvisa_compliant": True,
-                "cff_compliant": True,
-                "crm_compliant": True,
-                "regulatory_checks": []
-            }
-            
-            # Check ANVISA compliance
-            if prescription.control_level in ["A1", "A2", "A3"]:
-                compliance["regulatory_checks"].append("ANVISA controlled substance")
-            
-            # Check CFF compliance
-            if prescription.controlled_substance:
-                compliance["regulatory_checks"].append("CFF controlled substance")
-            
-            # Check CRM compliance
-            if prescription.requires_special_authorization:
-                compliance["regulatory_checks"].append("CRM special authorization required")
-            
-            return compliance
-            
-        except Exception as e:
-            logger.error(f"Error checking regulatory compliance: {e}")
-            return {"error": str(e)}
-    
-    def _check_sadt_compliance(self, sadt: SADT) -> Dict[str, Any]:
-        """Check regulatory compliance for SADT"""
-        try:
-            compliance = {
-                "tuss_compliant": True,
-                "anvisa_compliant": True,
-                "cff_compliant": True,
-                "crm_compliant": True,
-                "regulatory_checks": []
-            }
-            
-            # Check TUSS compliance
-            if sadt.procedure_code:
-                compliance["regulatory_checks"].append("TUSS procedure code")
-            
-            # Check ANVISA compliance
-            if sadt.sadt_type in ["surgery", "procedure"]:
-                compliance["regulatory_checks"].append("ANVISA procedure authorization")
-            
-            # Check CFF compliance
-            if sadt.sadt_type == "therapy":
-                compliance["regulatory_checks"].append("CFF therapy authorization")
-            
-            # Check CRM compliance
-            if sadt.sadt_type in ["surgery", "consultation"]:
-                compliance["regulatory_checks"].append("CRM medical procedure")
-            
-            return compliance
-            
-        except Exception as e:
-            logger.error(f"Error checking SADT compliance: {e}")
-            return {"error": str(e)}
-    
-    def _create_prescription_audit(self, prescription_id: int, action: str, 
-                                 previous_status: Optional[str], new_status: str, user_id: int):
-        """Create prescription audit record"""
-        try:
-            audit = PrescriptionAudit(
-                prescription_id=prescription_id,
-                action=action,
-                previous_status=previous_status,
-                new_status=new_status,
-                performed_by=user_id
-            )
-            
-            self.db.add(audit)
-            self.db.commit()
-            
-        except Exception as e:
-            logger.error(f"Error creating prescription audit: {e}")
-    
-    def _create_sadt_audit(self, sadt_id: int, action: str, 
-                          previous_status: Optional[str], new_status: str, user_id: int):
-        """Create SADT audit record"""
-        try:
-            audit = SADTAudit(
-                sadt_id=sadt_id,
-                action=action,
-                previous_status=previous_status,
-                new_status=new_status,
-                performed_by=user_id
-            )
-            
-            self.db.add(audit)
-            self.db.commit()
-            
-        except Exception as e:
-            logger.error(f"Error creating SADT audit: {e}")
+
+    def get_sadt_requests(self, search_params: SADTRequestSearch, skip: int = 0, limit: int = 100) -> List[SADTRequestInDB]:
+        """Get SADT requests with search filters"""
+        query = self.db.query(SADTRequest)
+        
+        if search_params.patient_id:
+            query = query.filter(SADTRequest.patient_id == search_params.patient_id)
+        if search_params.doctor_id:
+            query = query.filter(SADTRequest.doctor_id == search_params.doctor_id)
+        if search_params.service_type:
+            query = query.filter(SADTRequest.service_type == search_params.service_type)
+        if search_params.date_from:
+            query = query.filter(SADTRequest.request_date >= search_params.date_from)
+        if search_params.date_to:
+            query = query.filter(SADTRequest.request_date <= search_params.date_to)
+        
+        requests = query.order_by(desc(SADTRequest.request_date)).offset(skip).limit(limit).all()
+        return [SADTRequestInDB.from_orm(request) for request in requests]

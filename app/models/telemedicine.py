@@ -48,6 +48,37 @@ class TelemedicineSession(Base):
     description = Column(Text, nullable=True)
     scheduled_start = Column(DateTime(timezone=True), nullable=False)
     scheduled_end = Column(DateTime(timezone=True), nullable=False)
+    
+    # Native Platform Features
+    patient_link = Column(String(500), unique=True, nullable=True)  # Secure one-time patient link
+    patient_link_expires = Column(DateTime(timezone=True), nullable=True)  # Link expiration
+    room_password = Column(String(100), nullable=True)  # Optional room password
+    max_participants = Column(Integer, default=2)  # Maximum participants (doctor + patient)
+    
+    # Recording and Security
+    recording_enabled = Column(Boolean, default=False)
+    recording_consent_given = Column(Boolean, default=False)
+    recording_path = Column(String(500), nullable=True)  # Path to recorded video
+    recording_duration = Column(Integer, nullable=True)  # Recording duration in seconds
+    
+    # Screen Sharing
+    screen_sharing_enabled = Column(Boolean, default=True)
+    screen_sharing_consent_given = Column(Boolean, default=False)
+    
+    # Chat Features
+    chat_enabled = Column(Boolean, default=True)
+    chat_log_path = Column(String(500), nullable=True)  # Path to chat log
+    
+    # Technical Details
+    webrtc_config = Column(JSON, nullable=True)  # WebRTC configuration
+    stun_servers = Column(JSON, nullable=True)  # STUN servers configuration
+    turn_servers = Column(JSON, nullable=True)  # TURN servers configuration
+    bandwidth_limit = Column(Integer, default=1000)  # Bandwidth limit in kbps
+    
+    # Quality Settings
+    video_quality = Column(String(20), default="720p")  # 480p, 720p, 1080p
+    audio_quality = Column(String(20), default="high")  # low, medium, high
+    adaptive_bitrate = Column(Boolean, default=True)  # Adaptive bitrate streaming
     actual_start = Column(DateTime(timezone=True), nullable=True)
     actual_end = Column(DateTime(timezone=True), nullable=True)
     

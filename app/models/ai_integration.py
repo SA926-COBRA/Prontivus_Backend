@@ -48,6 +48,39 @@ class AIAnalysisSession(Base):
     
     # Session details
     session_id = Column(String(100), unique=True, nullable=False, index=True)
+    
+    # Audio Recording Features
+    audio_file_path = Column(String(500), nullable=True)  # Path to recorded audio
+    audio_duration_seconds = Column(Integer, nullable=True)  # Duration in seconds
+    audio_format = Column(String(20), default="webm")  # Audio format (webm, mp3, wav)
+    audio_quality = Column(String(20), default="high")  # Audio quality setting
+    audio_sample_rate = Column(Integer, default=44100)  # Sample rate in Hz
+    audio_bitrate = Column(Integer, default=128)  # Bitrate in kbps
+    
+    # Recording Settings
+    recording_enabled = Column(Boolean, default=True)
+    recording_consent_given = Column(Boolean, default=False)
+    recording_consent_timestamp = Column(DateTime(timezone=True), nullable=True)
+    auto_start_recording = Column(Boolean, default=False)  # Auto-start when session begins
+    auto_stop_recording = Column(Boolean, default=True)  # Auto-stop when session ends
+    
+    # Transcription Settings
+    transcription_provider = Column(Enum(AIProvider), default=AIProvider.OPENAI)
+    transcription_model = Column(String(100), default="whisper-1")  # Whisper model
+    transcription_language = Column(String(10), default="pt-BR")  # Language code
+    transcription_confidence = Column(Float, nullable=True)  # Confidence score
+    
+    # AI Analysis Settings
+    analysis_provider = Column(Enum(AIProvider), default=AIProvider.OPENAI)
+    analysis_model = Column(String(100), default="gpt-4")  # GPT model for analysis
+    analysis_temperature = Column(Float, default=0.3)  # Temperature for AI responses
+    analysis_max_tokens = Column(Integer, default=2000)  # Max tokens for analysis
+    
+    # Privacy and Security
+    audio_encrypted = Column(Boolean, default=True)  # Encrypt audio files
+    transcription_encrypted = Column(Boolean, default=True)  # Encrypt transcriptions
+    auto_delete_audio = Column(Boolean, default=True)  # Auto-delete after processing
+    retention_days = Column(Integer, default=30)  # Audio retention period
     consultation_id = Column(Integer, ForeignKey("appointments.id"), nullable=True, index=True)
     telemedicine_session_id = Column(Integer, ForeignKey("telemedicine_sessions.id"), nullable=True, index=True)
     
