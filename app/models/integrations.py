@@ -170,55 +170,8 @@ class IntegrationSyncLog(Base):
     integration = relationship("HealthPlanIntegration", back_populates="sync_logs")
     telemedicine_integration = relationship("TelemedicineIntegration", back_populates="sync_logs")
 
-class HealthPlanAuthorization(Base):
-    """Health plan authorization requests and responses"""
-    __tablename__ = "health_plan_authorizations"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    authorization_number = Column(String(100), unique=True, nullable=False)
-    
-    # Related Information
-    integration_id = Column(Integer, ForeignKey("health_plan_integrations.id"), nullable=False)
-    patient_id = Column(Integer, ForeignKey("patients.id"), nullable=False)
-    doctor_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    procedure_id = Column(Integer, ForeignKey("tiss_procedures.id"), nullable=True)
-    
-    # Authorization Details
-    procedure_code = Column(String(50), nullable=False)
-    procedure_description = Column(String(500), nullable=False)
-    requested_date = Column(Date, nullable=False)
-    urgency_level = Column(String(20), default="normal")  # normal, urgent, emergency
-    
-    # Request Information
-    request_data = Column(JSON, nullable=False)
-    request_sent_at = Column(DateTime(timezone=True), nullable=True)
-    
-    # Response Information
-    response_data = Column(JSON, nullable=True)
-    response_received_at = Column(DateTime(timezone=True), nullable=True)
-    authorization_status = Column(String(50), default="pending")  # pending, approved, denied, expired
-    
-    # Authorization Details
-    authorized_amount = Column(Numeric(10, 2), nullable=True)
-    copayment_amount = Column(Numeric(10, 2), nullable=True)
-    authorization_valid_until = Column(Date, nullable=True)
-    authorization_notes = Column(Text, nullable=True)
-    
-    # Status
-    status = Column(String(50), default="pending")
-    error_message = Column(Text, nullable=True)
-    
-    # Metadata
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    created_by = Column(Integer, ForeignKey("users.id"))
-    
-    # Relationships
-    integration = relationship("HealthPlanIntegration")
-    patient = relationship("Patient")
-    doctor = relationship("User", foreign_keys=[doctor_id])
-    procedure = relationship("TISSProcedure")
-    creator = relationship("User", foreign_keys=[created_by])
+# HealthPlanAuthorization model is now defined in health_plan_integration.py
+# Removed to avoid duplicate table definition
 
 class IntegrationWebhook(Base):
     """Webhook configurations for integrations"""

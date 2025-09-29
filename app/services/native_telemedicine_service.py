@@ -19,12 +19,12 @@ from app.models.telemedicine import (
     TelemedicineSessionStatus, TelemedicineConsentStatus
 )
 from app.schemas.telemedicine import (
-    TelemedicineSessionCreate, TelemedicineSessionUpdate, TelemedicineSessionInDB,
-    TelemedicineMessageCreate, TelemedicineMessageInDB,
-    TelemedicineFileCreate, TelemedicineFileInDB,
-    TelemedicineConsentCreate, TelemedicineConsentInDB,
-    TelemedicineConfigurationCreate, TelemedicineConfigurationUpdate, TelemedicineConfigurationInDB,
-    TelemedicineAnalyticsInDB, TelemedicineSessionJoin, WebRTCSignalingData
+    TelemedicineSessionCreate, TelemedicineSessionUpdate, TelemedicineSession,
+    TelemedicineMessageCreate, TelemedicineMessage,
+    TelemedicineFileCreate, TelemedicineFile,
+    TelemedicineConsentCreate, TelemedicineConsent,
+    TelemedicineConfigurationCreate, TelemedicineConfigurationUpdate, TelemedicineConfiguration,
+    TelemedicineAnalytics, TelemedicineSessionJoin
 )
 
 logger = logging.getLogger(__name__)
@@ -79,7 +79,7 @@ class NativeTelemedicineService:
             return None
 
     # Session Management
-    def create_session(self, session_data: TelemedicineSessionCreate, user_id: int) -> TelemedicineSessionInDB:
+    def create_session(self, session_data: TelemedicineSessionCreate, user_id: int) -> TelemedicineSession:
         """Create a new telemedicine session"""
         try:
             session_id = self._generate_session_id()
@@ -116,20 +116,20 @@ class NativeTelemedicineService:
                 "recording_enabled": session.recording_enabled
             }
             
-            return TelemedicineSessionInDB.from_orm(session)
+            return TelemedicineSession.from_orm(session)
         except Exception as e:
             self.db.rollback()
             logger.error(f"Error creating telemedicine session: {e}")
             raise
 
-    def get_session_by_id(self, session_id: str) -> Optional[TelemedicineSessionInDB]:
+    def get_session_by_id(self, session_id: str) -> Optional[TelemedicineSession]:
         """Get telemedicine session by ID"""
         session = self.db.query(TelemedicineSession).filter(
             TelemedicineSession.session_id == session_id
         ).first()
-        return TelemedicineSessionInDB.from_orm(session) if session else None
+        return TelemedicineSession.from_orm(session) if session else None
 
-    def get_session_by_patient_link(self, token: str) -> Optional[TelemedicineSessionInDB]:
+    def get_session_by_patient_link(self, token: str) -> Optional[TelemedicineSession]:
         """Get session by patient link token"""
         session_id = self._verify_patient_link(token)
         if not session_id:
@@ -184,7 +184,7 @@ class NativeTelemedicineService:
             
             return {
                 "success": True,
-                "session": TelemedicineSessionInDB.from_orm(session),
+                "session": TelemedicineSession.from_orm(session),
                 "webrtc_config": session.webrtc_config,
                 "participants": list(self.active_sessions[join_data.session_id]["participants"].keys())
             }
@@ -222,7 +222,7 @@ class NativeTelemedicineService:
             
             return {
                 "success": True,
-                "session": TelemedicineSessionInDB.from_orm(session),
+                "session": TelemedicineSession.from_orm(session),
                 "message": "Session started successfully"
             }
             
@@ -260,7 +260,7 @@ class NativeTelemedicineService:
             
             return {
                 "success": True,
-                "session": TelemedicineSessionInDB.from_orm(session),
+                "session": TelemedicineSession.from_orm(session),
                 "message": "Session ended successfully"
             }
             
@@ -269,7 +269,7 @@ class NativeTelemedicineService:
             return {"success": False, "error": str(e)}
 
     # WebRTC Signaling
-    def handle_webrtc_signaling(self, session_id: str, signaling_data: WebRTCSignalingData) -> Dict[str, Any]:
+    def handle_webrtc_signaling(self, session_id: str, signaling_data: Dict[str, Any]) -> Dict[str, Any]:
         """Handle WebRTC signaling messages"""
         try:
             if session_id not in self.active_sessions:
@@ -301,7 +301,7 @@ class NativeTelemedicineService:
             return {"success": False, "error": str(e)}
 
     # Chat Management
-    def send_message(self, session_id: str, message_data: TelemedicineMessageCreate) -> TelemedicineMessageInDB:
+    def send_message(self, session_id: str, message_data: TelemedicineMessageCreate) -> TelemedicineMessage:
         """Send a chat message"""
         try:
             session = self.db.query(TelemedicineSession).filter(
@@ -334,14 +334,14 @@ class NativeTelemedicineService:
                     "timestamp": message.timestamp.isoformat()
                 })
             
-            return TelemedicineMessageInDB.from_orm(message)
+            return TelemedicineMessage.from_orm(message)
             
         except Exception as e:
             self.db.rollback()
             logger.error(f"Error sending message: {e}")
             raise
 
-    def get_session_messages(self, session_id: str) -> List[TelemedicineMessageInDB]:
+    def get_session_messages(self, session_id: str) -> List[TelemedicineMessage]:
         """Get messages for a session"""
         session = self.db.query(TelemedicineSession).filter(
             TelemedicineSession.session_id == session_id
@@ -354,10 +354,10 @@ class NativeTelemedicineService:
             TelemedicineMessage.session_id == session.id
         ).order_by(TelemedicineMessage.timestamp).all()
         
-        return [TelemedicineMessageInDB.from_orm(msg) for msg in messages]
+        return [TelemedicineMessage.from_orm(msg) for msg in messages]
 
     # File Sharing
-    def upload_file(self, session_id: str, file_data: TelemedicineFileCreate) -> TelemedicineFileInDB:
+    def upload_file(self, session_id: str, file_data: TelemedicineFileCreate) -> TelemedicineFile:
         """Upload a file to session"""
         try:
             session = self.db.query(TelemedicineSession).filter(
@@ -387,7 +387,7 @@ class NativeTelemedicineService:
                     "uploaded_at": file.uploaded_at.isoformat()
                 })
             
-            return TelemedicineFileInDB.from_orm(file)
+            return TelemedicineFile.from_orm(file)
             
         except Exception as e:
             self.db.rollback()
@@ -395,7 +395,7 @@ class NativeTelemedicineService:
             raise
 
     # Consent Management
-    def request_consent(self, session_id: str, consent_data: TelemedicineConsentCreate) -> TelemedicineConsentInDB:
+    def request_consent(self, session_id: str, consent_data: TelemedicineConsentCreate) -> TelemedicineConsent:
         """Request patient consent for recording or screen sharing"""
         try:
             session = self.db.query(TelemedicineSession).filter(
@@ -415,14 +415,14 @@ class NativeTelemedicineService:
             self.db.commit()
             self.db.refresh(consent)
             
-            return TelemedicineConsentInDB.from_orm(consent)
+            return TelemedicineConsent.from_orm(consent)
             
         except Exception as e:
             self.db.rollback()
             logger.error(f"Error requesting consent: {e}")
             raise
 
-    def respond_to_consent(self, consent_id: int, granted: bool, user_id: int) -> TelemedicineConsentInDB:
+    def respond_to_consent(self, consent_id: int, granted: bool, user_id: int) -> TelemedicineConsent:
         """Respond to consent request"""
         try:
             consent = self.db.query(TelemedicineConsent).filter(
@@ -449,7 +449,7 @@ class NativeTelemedicineService:
             self.db.commit()
             self.db.refresh(consent)
             
-            return TelemedicineConsentInDB.from_orm(consent)
+            return TelemedicineConsent.from_orm(consent)
             
         except Exception as e:
             self.db.rollback()
@@ -513,7 +513,7 @@ class NativeTelemedicineService:
         ]
 
     # Configuration Management
-    def get_configuration(self) -> TelemedicineConfigurationInDB:
+    def get_configuration(self) -> TelemedicineConfiguration:
         """Get telemedicine configuration"""
         config = self.db.query(TelemedicineConfiguration).first()
         if not config:
@@ -534,9 +534,9 @@ class NativeTelemedicineService:
             self.db.commit()
             self.db.refresh(config)
         
-        return TelemedicineConfigurationInDB.from_orm(config)
+        return TelemedicineConfiguration.from_orm(config)
 
-    def update_configuration(self, config_data: TelemedicineConfigurationUpdate) -> TelemedicineConfigurationInDB:
+    def update_configuration(self, config_data: TelemedicineConfigurationUpdate) -> TelemedicineConfiguration:
         """Update telemedicine configuration"""
         config = self.db.query(TelemedicineConfiguration).first()
         if not config:
@@ -549,4 +549,4 @@ class NativeTelemedicineService:
         
         self.db.commit()
         self.db.refresh(config)
-        return TelemedicineConfigurationInDB.from_orm(config)
+        return TelemedicineConfiguration.from_orm(config)

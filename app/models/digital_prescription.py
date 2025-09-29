@@ -100,7 +100,7 @@ class DigitalPrescription(Base):
 
 class PrescriptionMedication(Base):
     """Medications in a prescription"""
-    __tablename__ = "prescription_medications"
+    __tablename__ = "digital_prescription_medications"
 
     id = Column(Integer, primary_key=True, index=True)
     prescription_id = Column(Integer, ForeignKey("digital_prescriptions.id"), nullable=False, index=True)

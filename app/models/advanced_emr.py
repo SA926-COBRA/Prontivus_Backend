@@ -96,7 +96,7 @@ class PrescriptionType(Base):
 
 class Prescription(Base):
     """Advanced prescription with ICP-Brasil signature support"""
-    __tablename__ = "prescriptions"
+    __tablename__ = "advanced_prescriptions"
     
     id = Column(Integer, primary_key=True, index=True)
     prescription_number = Column(String(50), unique=True, index=True)
@@ -156,10 +156,10 @@ class Prescription(Base):
 
 class PrescriptionMedication(Base):
     """Individual medications within a prescription"""
-    __tablename__ = "prescription_medications"
+    __tablename__ = "advanced_prescription_medications"
     
     id = Column(Integer, primary_key=True, index=True)
-    prescription_id = Column(Integer, ForeignKey("prescriptions.id"), nullable=False)
+    prescription_id = Column(Integer, ForeignKey("advanced_prescriptions.id"), nullable=False)
     
     # Medication Details
     medication_name = Column(String(200), nullable=False)
@@ -235,7 +235,7 @@ class PrescriptionAuditLog(Base):
     __tablename__ = "prescription_audit_logs"
     
     id = Column(Integer, primary_key=True, index=True)
-    prescription_id = Column(Integer, ForeignKey("prescriptions.id"), nullable=False)
+    prescription_id = Column(Integer, ForeignKey("advanced_prescriptions.id"), nullable=False)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     
     # Action Details
@@ -253,32 +253,9 @@ class PrescriptionAuditLog(Base):
 
 
 # Update existing Patient model relationships
-class Patient(Base):
-    """Extended Patient model with EMR relationships"""
-    __tablename__ = "patients"
-    
-    # Existing fields...
-    id = Column(Integer, primary_key=True, index=True)
-    # ... other existing fields ...
-    
-    # EMR Relationships
-    medical_histories = relationship("PatientHistory", back_populates="patient")
-    prescriptions = relationship("Prescription", back_populates="patient")
-    sadt_requests = relationship("SADTRequest", back_populates="patient")
+# Patient model is defined in patient.py - we don't redefine it here
+# The relationships with Patient are handled through foreign keys in other models
 
 
-# Update existing User model relationships  
-class User(Base):
-    """Extended User model with EMR relationships"""
-    __tablename__ = "users"
-    
-    # Existing fields...
-    id = Column(Integer, primary_key=True, index=True)
-    # ... other existing fields ...
-    
-    # EMR Relationships
-    created_histories = relationship("PatientHistory", foreign_keys="PatientHistory.created_by")
-    updated_histories = relationship("PatientHistory", foreign_keys="PatientHistory.updated_by")
-    prescriptions = relationship("Prescription", foreign_keys="Prescription.doctor_id")
-    sadt_requests = relationship("SADTRequest", foreign_keys="SADTRequest.doctor_id")
-    audit_logs = relationship("PrescriptionAuditLog", foreign_keys="PrescriptionAuditLog.user_id")
+# User model is defined in user.py - we don't redefine it here
+# The relationships with User are handled through foreign keys in other models

@@ -14,12 +14,12 @@ from app.database.database import get_db
 from app.services.native_telemedicine_service import NativeTelemedicineService
 from app.services.auth_service import AuthService
 from app.schemas.telemedicine import (
-    TelemedicineSessionCreate, TelemedicineSessionUpdate, TelemedicineSessionInDB,
-    TelemedicineMessageCreate, TelemedicineMessageInDB,
-    TelemedicineFileCreate, TelemedicineFileInDB,
-    TelemedicineConsentCreate, TelemedicineConsentInDB,
-    TelemedicineConfigurationCreate, TelemedicineConfigurationUpdate, TelemedicineConfigurationInDB,
-    TelemedicineAnalyticsInDB, TelemedicineSessionJoin, WebRTCSignalingData,
+    TelemedicineSessionCreate, TelemedicineSessionUpdate, TelemedicineSession,
+    TelemedicineMessageCreate, TelemedicineMessage,
+    TelemedicineFileCreate, TelemedicineFile,
+    TelemedicineConsentCreate, TelemedicineConsent,
+    TelemedicineConfigurationCreate, TelemedicineConfigurationUpdate, TelemedicineConfiguration,
+    TelemedicineAnalytics, TelemedicineSessionJoin,
     TelemedicineSessionStatus, TelemedicineConsentStatus
 )
 
@@ -55,7 +55,7 @@ class ConnectionManager:
 manager = ConnectionManager()
 
 # Session Management Endpoints
-@router.post("/sessions", response_model=TelemedicineSessionInDB)
+@router.post("/sessions", response_model=TelemedicineSession)
 async def create_session(
     session_data: TelemedicineSessionCreate,
     db: Session = Depends(get_db),
@@ -69,7 +69,7 @@ async def create_session(
         logger.error(f"Error creating telemedicine session: {e}")
         raise HTTPException(status_code=500, detail="Error creating telemedicine session")
 
-@router.get("/sessions", response_model=List[TelemedicineSessionInDB])
+@router.get("/sessions", response_model=List[TelemedicineSession])
 async def get_sessions(
     doctor_id: Optional[int] = None,
     patient_id: Optional[int] = None,
@@ -91,12 +91,12 @@ async def get_sessions(
             query = query.filter(TelemedicineSession.status == status)
         
         sessions = query.order_by(TelemedicineSession.scheduled_start.desc()).offset(skip).limit(limit).all()
-        return [TelemedicineSessionInDB.from_orm(session) for session in sessions]
+        return [TelemedicineSession.from_orm(session) for session in sessions]
     except Exception as e:
         logger.error(f"Error getting telemedicine sessions: {e}")
         raise HTTPException(status_code=500, detail="Error getting telemedicine sessions")
 
-@router.get("/sessions/{session_id}", response_model=TelemedicineSessionInDB)
+@router.get("/sessions/{session_id}", response_model=TelemedicineSession)
 async def get_session(
     session_id: str,
     db: Session = Depends(get_db),
@@ -115,7 +115,7 @@ async def get_session(
         logger.error(f"Error getting telemedicine session: {e}")
         raise HTTPException(status_code=500, detail="Error getting telemedicine session")
 
-@router.get("/sessions/patient-link/{token}", response_model=TelemedicineSessionInDB)
+@router.get("/sessions/patient-link/{token}", response_model=TelemedicineSession)
 async def get_session_by_patient_link(
     token: str,
     db: Session = Depends(get_db)
@@ -196,7 +196,7 @@ async def end_session(
 @router.post("/sessions/{session_id}/signaling")
 async def handle_webrtc_signaling(
     session_id: str,
-    signaling_data: WebRTCSignalingData,
+    signaling_data: Dict[str, Any],
     db: Session = Depends(get_db),
     current_user = Depends(AuthService.get_current_user)
 ):
@@ -214,7 +214,7 @@ async def handle_webrtc_signaling(
         raise HTTPException(status_code=500, detail="Error handling WebRTC signaling")
 
 # Chat Endpoints
-@router.post("/sessions/{session_id}/messages", response_model=TelemedicineMessageInDB)
+@router.post("/sessions/{session_id}/messages", response_model=TelemedicineMessage)
 async def send_message(
     session_id: str,
     message_data: TelemedicineMessageCreate,
@@ -229,7 +229,7 @@ async def send_message(
         logger.error(f"Error sending message: {e}")
         raise HTTPException(status_code=500, detail="Error sending message")
 
-@router.get("/sessions/{session_id}/messages", response_model=List[TelemedicineMessageInDB])
+@router.get("/sessions/{session_id}/messages", response_model=List[TelemedicineMessage])
 async def get_session_messages(
     session_id: str,
     db: Session = Depends(get_db),
@@ -244,7 +244,7 @@ async def get_session_messages(
         raise HTTPException(status_code=500, detail="Error getting session messages")
 
 # File Sharing Endpoints
-@router.post("/sessions/{session_id}/files", response_model=TelemedicineFileInDB)
+@router.post("/sessions/{session_id}/files", response_model=TelemedicineFile)
 async def upload_file(
     session_id: str,
     file_data: TelemedicineFileCreate,
@@ -260,7 +260,7 @@ async def upload_file(
         raise HTTPException(status_code=500, detail="Error uploading file")
 
 # Consent Management Endpoints
-@router.post("/sessions/{session_id}/consent", response_model=TelemedicineConsentInDB)
+@router.post("/sessions/{session_id}/consent", response_model=TelemedicineConsent)
 async def request_consent(
     session_id: str,
     consent_data: TelemedicineConsentCreate,
@@ -319,7 +319,7 @@ async def get_active_sessions(
         raise HTTPException(status_code=500, detail="Error getting active sessions")
 
 # Configuration Endpoints
-@router.get("/configuration", response_model=TelemedicineConfigurationInDB)
+@router.get("/configuration", response_model=TelemedicineConfiguration)
 async def get_configuration(
     db: Session = Depends(get_db),
     current_user = Depends(AuthService.get_current_user)
@@ -332,7 +332,7 @@ async def get_configuration(
         logger.error(f"Error getting configuration: {e}")
         raise HTTPException(status_code=500, detail="Error getting configuration")
 
-@router.put("/configuration", response_model=TelemedicineConfigurationInDB)
+@router.put("/configuration", response_model=TelemedicineConfiguration)
 async def update_configuration(
     config_data: TelemedicineConfigurationUpdate,
     db: Session = Depends(get_db),

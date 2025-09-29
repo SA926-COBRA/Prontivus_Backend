@@ -16,9 +16,10 @@ import hmac
 
 from app.models.integrations import (
     HealthPlanIntegration, TelemedicineIntegration,
-    IntegrationSyncLog, HealthPlanAuthorization, IntegrationWebhook,
+    IntegrationSyncLog, IntegrationWebhook,
     WebhookLog, IntegrationHealthCheck
 )
+from app.models.health_plan_integration import HealthPlanAuthorization
 from app.schemas.integrations import (
     IntegrationSearchRequest,
     AuthorizationSearchRequest, IntegrationSyncRequest,
