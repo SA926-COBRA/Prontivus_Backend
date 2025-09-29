@@ -7,6 +7,7 @@ import os
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from app.api.v1.api import api_router
 
 # Create FastAPI application
 app = FastAPI(
@@ -32,6 +33,9 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
 )
+
+# Include API routes
+app.include_router(api_router, prefix="/api/v1")
 
 @app.get("/")
 async def root():
