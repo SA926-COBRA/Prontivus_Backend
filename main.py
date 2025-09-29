@@ -6,6 +6,7 @@ FastAPI Backend Application
 import os
 import uvicorn
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 # Create FastAPI application
 app = FastAPI(
@@ -14,6 +15,22 @@ app = FastAPI(
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc"
+)
+
+# CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "https://prontivus-frontend.vercel.app",
+        "https://prontivus-frontend-git-main-prontivus.vercel.app",
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:5173"
+    ],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allow_headers=["*"],
 )
 
 @app.get("/")
