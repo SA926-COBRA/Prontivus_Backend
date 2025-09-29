@@ -105,7 +105,9 @@ async def health_check():
         "version": "1.0.0"
     }
 
-if __name__ == "__main__":
+# Force server to start regardless of how module is executed
+def start_server():
+    """Start the server - called automatically"""
     # Get port from environment or default to 8000
     port = int(os.getenv("PORT", 8000))
     
@@ -125,3 +127,11 @@ if __name__ == "__main__":
         access_log=True,
         reload=False
     )
+
+# Always start server for Render deployment
+if __name__ == "__main__":
+    start_server()
+else:
+    # For Render - start server immediately when module is imported
+    print("🚀 Render deployment detected - starting server immediately...")
+    start_server()
